@@ -1,18 +1,35 @@
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import { Paper, Stack, Typography } from "@mui/material";
-import { TabType } from "@/app";
-import useExpenseStore from "@/stores/use-expense-store";
-import DateTools from "@/lib/date-tools";
+import useExpenseTracker from "@/hooks/use-expense-tracker";
+import useSettingsStore from "@/stores/use-settings-store";
+import CurrencyTools from "@/tools/currency-tools";
+import TrackerTools from "@/tools/tracker-tools";
 
-type ExpenseTotalProps = {
-  type: TabType;
-};
+const ExpenseTotal = () => {
+  const { templates, records } = useExpenseTracker();
+  const { selectedTab } = useSettingsStore();
 
-const ExpenseTotal: React.FC<ExpenseTotalProps> = ({ type }) => {
-  const { templates, records, getTotalByDate } = useExpenseStore();
+  const totals = useMemo(() => {
+    const { monthly, annual } = templates.reduce(
+      (acc, template) => {
+        const record = records.indexed[TrackerTools.getRecordKey({ templateId: template.id, type: template.type })] || null;
+        const isPaid = Boolean(record);
+        const amount = template.amount;
 
-  const total = useMemo(() => {
-    const { monthly, annual } = getTotalByDate(DateTools.now);
+        if (template.type === "monthly") {
+          acc.monthly.expected += amount;
+
+          if (isPaid) acc.monthly.paid += amount;
+        } else {
+          acc.annual.expected += amount;
+
+          if (isPaid) acc.annual.paid += amount;
+        }
+
+        return acc;
+      },
+      { monthly: { expected: 0, paid: 0 }, annual: { expected: 0, paid: 0 } }
+    );
 
     return {
       monthly,
@@ -22,22 +39,12 @@ const ExpenseTotal: React.FC<ExpenseTotalProps> = ({ type }) => {
         paid: monthly.paid + annual.paid,
       },
     };
-  }, [templates, records]);
+  }, [records.indexed, templates]);
 
   return (
-    <Stack
-      component={Paper}
-      direction="row"
-      justifyContent="space-between"
-      padding={1}
-      borderRadius={1}
-    >
-      <Typography variant="subtitle1">
-        Total previsto: ${total[type].expected}
-      </Typography>
-      <Typography variant="subtitle1">
-        Total pagado: ${total[type].paid}
-      </Typography>
+    <Stack component={Paper} elevation={0} direction="row" justifyContent="space-between" padding={1} marginBottom={1} borderRadius={1}>
+      <Typography variant="subtitle1">Total previsto: {CurrencyTools.format(totals[selectedTab].expected)}</Typography>
+      <Typography variant="subtitle1">Total pagado: {CurrencyTools.format(totals[selectedTab].paid)}</Typography>
     </Stack>
   );
 };

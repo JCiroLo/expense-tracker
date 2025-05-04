@@ -1,7 +1,7 @@
 {
   "files": [],
   "compilerOptions": {
-    "target": "ES2023",
+    "target": "ESNext",
     "paths": {
       "@/*": ["./src/*"]
     }
