@@ -99,7 +99,7 @@ const ExpenseList = () => {
   return (
     <>
       <List disablePadding>
-        {[...templates, ...templates, ...templates, ...templates, ...templates, ...templates, ...templates].map((template) => {
+        {templates.map((template) => {
           const paid = Boolean(records.indexed[TrackerTools.getRecordKey({ templateId: template.id, type: template.type })]);
           const loading = isLoading.template?.id === template.id;
 

@@ -42,7 +42,16 @@ const ExpenseTotal = () => {
   }, [records.indexed, templates]);
 
   return (
-    <Stack component={Paper} elevation={0} direction="row" justifyContent="space-between" padding={1} marginBottom={1} borderRadius={1}>
+    <Stack
+      component={Paper}
+      elevation={0}
+      direction="row"
+      justifyContent="space-between"
+      width={{ xs: "calc(100% - 64px)", sm: "100%" }}
+      padding={1}
+      marginBottom={1}
+      borderRadius={1}
+    >
       <Typography variant="subtitle1">Total previsto: {CurrencyTools.format(totals[selectedTab].expected)}</Typography>
       <Typography variant="subtitle1">Total pagado: {CurrencyTools.format(totals[selectedTab].paid)}</Typography>
     </Stack>

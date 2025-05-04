@@ -8,7 +8,17 @@ const Sidebar = () => {
   // };
 
   return (
-    <Stack component="aside" position="fixed" top={0} left={0} bottom={0} flexDirection="column" justifyContent="space-between" padding={1}>
+    <Stack
+      component="aside"
+      display={{ xs: "none", sm: "flex" }}
+      position="fixed"
+      top={0}
+      left={0}
+      bottom={0}
+      flexDirection="column"
+      justifyContent="space-between"
+      padding={1}
+    >
       <Stack component="nav">
         {/* <Zoom in>
           <Fab aria-label={mode === "dark" ? "light mode" : "dark mode"} size="small" sx={{ boxShadow: 0 }} onClick={handleSwitchTheme}>
