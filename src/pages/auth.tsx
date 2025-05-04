@@ -1,5 +1,5 @@
 import React from "react";
-import { Button, Stack, Typography } from "@mui/material";
+import { Alert, Button, Stack, Typography } from "@mui/material";
 import { MuiTelInput, MuiTelInputInfo } from "mui-tel-input";
 import { MuiOtpInput } from "mui-one-time-password-input";
 import { ConfirmationResult, RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
@@ -103,6 +103,11 @@ const Auth = () => {
             Enviaremos un código de verificación por SMS
           </Typography>
           <MuiTelInput value={phone.number} defaultCountry="CO" forceCallingCode fullWidth onChange={handlePhoneChange} />
+          {error === "phone" && (
+            <Alert severity="error" variant="outlined">
+              Ha ocurrido un error. Por favor, verifica que el número de teléfono es correcto e intenta nuevamente.
+            </Alert>
+          )}
           <Button type="submit" loading={loading} fullWidth>
             Enviar código
           </Button>
@@ -125,6 +130,11 @@ const Auth = () => {
             Hemos enviado un código de verificación al número {phone.number}
           </Typography>
           <MuiOtpInput value={code} length={6} gap={1} TextFieldsProps={{ fullWidth: true }} onChange={handleCodeChange} />
+          {error === "code" && (
+            <Alert severity="error" variant="outlined">
+              Ha ocurrido un error. Por favor, verifica que el código es correcto e intenta nuevamente.
+            </Alert>
+          )}
           <Button type="submit" loading={loading} fullWidth>
             Verificar
           </Button>
