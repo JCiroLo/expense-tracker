@@ -3,7 +3,7 @@ import { createBrowserRouter } from "react-router";
 import App from "@/components/layout/app";
 
 import Home from "@/pages/home";
-import Auth from "@/pages/auth";
+import Signin from "@/pages/signin";
 import PrivateRoute from "@/components/layout/private-route";
 
 const router = createBrowserRouter([
@@ -17,7 +17,7 @@ const router = createBrowserRouter([
       },
       {
         path: "signin",
-        element: <PrivateRoute component={Auth} scopes={["HIDE_FOR_AUTH"]} />,
+        element: <PrivateRoute component={Signin} scopes={["HIDE_FOR_AUTH"]} />,
       },
     ],
   },

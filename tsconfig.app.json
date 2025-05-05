@@ -23,6 +23,7 @@
     "noUncheckedSideEffectImports": true,
 
     /* React */
+    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
     }
