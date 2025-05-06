@@ -13,6 +13,8 @@ const App = () => {
         justifyContent: "center",
         minHeight: "100dvh",
         paddingX: 1,
+        paddingTop: "env(safe-area-inset-top)",
+        paddingBottom: "env(safe-area-inset-bottom)",
       }}
     >
       <Outlet />
