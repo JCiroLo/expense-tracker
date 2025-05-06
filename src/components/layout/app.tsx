@@ -11,10 +11,8 @@ const App = () => {
         display: "flex",
         flexDirection: "column",
         justifyContent: "center",
-        minHeight: "100dvh",
+        minHeight: "calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom))",
         paddingX: 1,
-        paddingTop: "env(safe-area-inset-top)",
-        paddingBottom: "env(safe-area-inset-bottom)",
       }}
     >
       <Outlet />
