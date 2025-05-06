@@ -88,48 +88,50 @@ const ExpenseList = () => {
     setIsLoading((prev) => ({ ...prev, template: null }));
   }
 
-  if (templates.length === 0) {
-    return (
-      <Typography textAlign="center" mt={4} color="text.secondary">
-        No hay gastos para mostrar.
-      </Typography>
-    );
-  }
-
   return (
     <>
       <List sx={{ height: "100%", my: 2, overflowY: "auto" }} disablePadding>
-        {templates.map((template) => {
-          const paid = Boolean(records.indexed[TrackerTools.getRecordKey({ templateId: template.id, type: template.type })]);
-          const loading = isLoading.template?.id === template.id;
+        {templates.length === 0 ? (
+          <Typography variant="body2" color="text.secondary" textAlign="center" sx={{ my: 2 }}>
+            No hay gastos registrados.
+          </Typography>
+        ) : (
+          templates.map((template) => {
+            const paid = Boolean(records.indexed[TrackerTools.getRecordKey({ templateId: template.id, type: template.type })]);
+            const loading = isLoading.template?.id === template.id;
 
-          return (
-            <ListItem
-              key={template.id}
-              secondaryAction={
-                <IconButton edge="end" onClick={(event) => handleMenuOpen(event, template)}>
-                  <EllipsisIcon />
-                </IconButton>
-              }
-              disablePadding
-            >
-              <ListItemButton
-                disabled={paid || loading}
-                sx={{ borderRadius: 1 }}
-                dense
-                disableGutters
-                onClick={() => handleMarkAsPaid(template)}
+            return (
+              <ListItem
+                key={template.id}
+                secondaryAction={
+                  <IconButton edge="end" onClick={(event) => handleMenuOpen(event, template)}>
+                    <EllipsisIcon />
+                  </IconButton>
+                }
+                disablePadding
               >
-                {loading ? <CircularProgress size={42} sx={{ padding: "9px" }} /> : <Checkbox checked={paid} tabIndex={-1} disableRipple />}
+                <ListItemButton
+                  disabled={paid || loading}
+                  sx={{ borderRadius: 1 }}
+                  dense
+                  disableGutters
+                  onClick={() => handleMarkAsPaid(template)}
+                >
+                  {loading ? (
+                    <CircularProgress size={42} sx={{ padding: "9px" }} />
+                  ) : (
+                    <Checkbox checked={paid} tabIndex={-1} disableRipple />
+                  )}
 
-                <ListItemText
-                  primary={`${template.title} - ${CurrencyTools.format(template.amount)}`}
-                  secondary={`Día de vencimiento: ${template.dueDay}`}
-                />
-              </ListItemButton>
-            </ListItem>
-          );
-        })}
+                  <ListItemText
+                    primary={`${template.title} - ${CurrencyTools.format(template.amount)}`}
+                    secondary={`Día de vencimiento: ${template.dueDay}`}
+                  />
+                </ListItemButton>
+              </ListItem>
+            );
+          })
+        )}
       </List>
       <Menu
         open={Boolean(menuAnchor.element)}
