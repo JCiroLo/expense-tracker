@@ -11,7 +11,8 @@ const App = () => {
         display: "flex",
         flexDirection: "column",
         justifyContent: "center",
-        minHeight: "100vh",
+        minHeight: "100dvh",
+        paddingX: 1,
       }}
     >
       <Outlet />
