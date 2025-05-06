@@ -98,7 +98,7 @@ const ExpenseList = () => {
 
   return (
     <>
-      <List disablePadding>
+      <List sx={{ height: "100%", my: 2, overflowY: "auto" }} disablePadding>
         {templates.map((template) => {
           const paid = Boolean(records.indexed[TrackerTools.getRecordKey({ templateId: template.id, type: template.type })]);
           const loading = isLoading.template?.id === template.id;

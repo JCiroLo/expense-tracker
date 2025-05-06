@@ -25,9 +25,8 @@ const Home = () => {
           <Tab label="Todos" value="all" />
         </Tabs>
       </Stack>
-      <Stack flexGrow={1} sx={{ height: "calc(100vh - 48px - 104px)", my: 2, overflow: "auto" }}>
-        <ExpenseList />
-      </Stack>
+
+      <ExpenseList />
 
       <ExpenseTotal />
 
