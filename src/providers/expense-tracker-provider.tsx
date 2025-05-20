@@ -1,16 +1,23 @@
 import React, { useMemo } from "react";
 import { QueryObserverResult, RefetchOptions, useQuery } from "@tanstack/react-query";
+import dayjs from "dayjs";
 import Loader from "@/components/layout/loader";
 import $ExpenseTemplate from "@/services/expense-template";
 import $ExpenseRecord from "@/services/expense-record";
-import useSettingsStore from "@/stores/use-settings-store";
 import useSessionStore from "@/stores/use-session-store";
 import ArrayTools from "@/tools/array-tools";
 import TrackerTools from "@/tools/tracker-tools";
+import Env from "@/lib/env";
 import { ExpenseRecord, ExpenseTemplate } from "@/types/expense";
 
 type ExpenseTrackerContextType = {
-  templates: ExpenseTemplate[];
+  templates: {
+    expired: ExpenseTemplate[];
+    closeToExpire: ExpenseTemplate[];
+    monthly: ExpenseTemplate[];
+    annual: ExpenseTemplate[];
+    all: ExpenseTemplate[];
+  };
   records: {
     indexed: Record<string, ExpenseRecord>;
     all: ExpenseRecord[];
@@ -57,12 +64,13 @@ const ExpenseTrackerProvider: React.FC<ExpenseTrackerProviderProps> = ({ childre
       };
     },
   });
-  const { selectedTab } = useSettingsStore();
 
   // Here is where the list of expenses should be calculated
-  const sortedTemplates = useMemo(() => {
+  const templates = useMemo(() => {
     if (!data?.templates) {
       return {
+        expired: [],
+        closeToExpire: [],
         monthly: [],
         annual: [],
         all: [],
@@ -71,19 +79,33 @@ const ExpenseTrackerProvider: React.FC<ExpenseTrackerProviderProps> = ({ childre
 
     const sorted = Object.groupBy(data.templates, (record) => record.type);
 
+    const expired: ExpenseTemplate[] = [];
+    const closeToExpire: ExpenseTemplate[] = [];
+    const today = dayjs().startOf("day");
+
+    (sorted.monthly || []).forEach((template) => {
+      const dueDate = dayjs().date(template.dueDay).startOf("day");
+      const diff = dueDate.diff(today, "day");
+
+      if (diff <= Env.MAX_DAYS_EXPIRATION_DANGER) {
+        expired.push(template);
+        return;
+      }
+
+      if (diff <= Env.MAX_DAYS_EXPIRATION_WARNING) {
+        closeToExpire.push(template);
+        return;
+      }
+    });
+
     return {
+      expired,
+      closeToExpire,
       monthly: sorted.monthly || [],
       annual: sorted.annual || [],
       all: data.templates,
     };
   }, [data]);
-
-  // Here is where the list of expenses should be filtered
-  const templates = useMemo(() => {
-    console.log("filtering templates");
-
-    return sortedTemplates[selectedTab];
-  }, [sortedTemplates, selectedTab]);
 
   const records = useMemo(() => {
     console.log("calculating all records");

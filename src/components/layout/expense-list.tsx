@@ -1,26 +1,15 @@
-import { useState } from "react";
-import {
-  List,
-  ListItem,
-  ListItemText,
-  Checkbox,
-  Typography,
-  ListItemButton,
-  IconButton,
-  Menu,
-  MenuItem,
-  Divider,
-  CircularProgress,
-} from "@mui/material";
-import EllipsisIcon from "@/components/icons/ellipsis-icon";
+import { useMemo, useState } from "react";
+import { List, Typography, Menu, MenuItem, Divider } from "@mui/material";
 import useExpenseTracker from "@/hooks/use-expense-tracker";
-import CurrencyTools from "@/tools/currency-tools";
+import useSettingsStore from "@/stores/use-settings-store";
+import $ExpenseRecord from "@/services/expense-record";
 import TrackerTools from "@/tools/tracker-tools";
 import { ExpenseRecord, ExpenseTemplate } from "@/types/expense";
-import $ExpenseRecord from "@/services/expense-record";
+import ExpenseListItem from "./expense-list-item";
 
 const ExpenseList = () => {
   const { templates, records, refresh } = useExpenseTracker();
+  const selectedTab = useSettingsStore((state) => state.selectedTab);
 
   const [menuAnchor, setMenuAnchor] = useState({
     template: null as ExpenseTemplate | null,
@@ -31,6 +20,8 @@ const ExpenseList = () => {
   const [isLoading, setIsLoading] = useState({
     template: null as ExpenseTemplate | null,
   });
+
+  const selectedTemplates = useMemo(() => templates[selectedTab], [selectedTab, templates]);
 
   function handleMenuOpen(event: React.MouseEvent<HTMLElement>, template: ExpenseTemplate) {
     const record = records.indexed[TrackerTools.getRecordKey({ templateId: template.id, type: template.type })] || null;
@@ -90,59 +81,24 @@ const ExpenseList = () => {
 
   return (
     <>
-      <List sx={{ height: "100%", my: 2, overflowY: "auto" }} disablePadding>
-        {templates.length === 0 ? (
+      <List sx={{ height: "100%", overflowY: "auto" }} disablePadding>
+        {selectedTemplates.length === 0 ? (
           <Typography variant="body2" color="text.secondary" textAlign="center" sx={{ my: 2 }}>
             No hay gastos registrados.
           </Typography>
         ) : (
-          templates.map((template) => {
-            const paid = Boolean(records.indexed[TrackerTools.getRecordKey({ templateId: template.id, type: template.type })]);
-            const loading = isLoading.template?.id === template.id;
-
-            return (
-              <ListItem
-                key={template.id}
-                secondaryAction={
-                  <IconButton edge="end" onClick={(event) => handleMenuOpen(event, template)}>
-                    <EllipsisIcon />
-                  </IconButton>
-                }
-                disablePadding
-              >
-                <ListItemButton
-                  disabled={paid || loading}
-                  sx={{ borderRadius: 1 }}
-                  dense
-                  disableGutters
-                  onClick={() => handleMarkAsPaid(template)}
-                >
-                  {loading ? (
-                    <CircularProgress size={42} sx={{ padding: "9px" }} />
-                  ) : (
-                    <Checkbox checked={paid} tabIndex={-1} disableRipple />
-                  )}
-
-                  <ListItemText
-                    primary={`${template.title} - ${CurrencyTools.format(template.amount)}`}
-                    secondary={`Día de vencimiento: ${template.dueDay}`}
-                  />
-                </ListItemButton>
-              </ListItem>
-            );
-          })
+          selectedTemplates.map((template) => (
+            <ExpenseListItem
+              key={template.id}
+              template={template}
+              loading={isLoading.template?.id === template.id}
+              onCheck={handleMarkAsPaid}
+              onMenu={handleMenuOpen}
+            />
+          ))
         )}
       </List>
-      <Menu
-        open={Boolean(menuAnchor.element)}
-        anchorEl={menuAnchor.element}
-        slotProps={{
-          paper: {
-            style: {},
-          },
-        }}
-        onClose={handleMenuClose}
-      >
+      <Menu open={Boolean(menuAnchor.element)} anchorEl={menuAnchor.element} onClose={handleMenuClose}>
         {menuAnchor.isPaid ? (
           <MenuItem
             onClick={() => {

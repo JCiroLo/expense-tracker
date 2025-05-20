@@ -1,4 +1,4 @@
-import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, query, updateDoc, where } from "firebase/firestore";
+import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, orderBy, query, updateDoc, where } from "firebase/firestore";
 import { assignTypes, db } from "@/lib/firebase";
 import Response from "@/lib/response";
 import { ExpenseTemplate } from "@/types/expense";
@@ -15,7 +15,7 @@ const $ExpenseTemplate = {
     return Response.success(snapshot.data());
   },
   async getAll({ userId }: { userId: string }) {
-    const q = query(firebase.collection, where("userId", "==", userId));
+    const q = query(firebase.collection, where("userId", "==", userId), orderBy("dueDay", "desc"));
 
     const snapshot = await getDocs(q);
 

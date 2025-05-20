@@ -79,7 +79,7 @@ const ExpenseFormDialog: React.FC<ExpenseFormDialogProps> = ({ open, onClose }) 
       </DialogContent>
       <DialogActions>
         <Button variant="outlined" fullWidth onClick={onClose}>
-          Cancear
+          Cancelar
         </Button>
         <Button variant="contained" type="submit" form="expense-form" loading={isLoading} fullWidth>
           Crear

@@ -1,4 +1,4 @@
-import { createTheme } from "@mui/material";
+import { createTheme, type Shadows } from "@mui/material";
 
 const theme = createTheme({
   colorSchemes: {
@@ -6,10 +6,28 @@ const theme = createTheme({
       palette: {
         mode: "dark",
         primary: {
-          main: "rgb(245, 182, 6)",
+          main: "#ff9e64",
+        },
+        success: {
+          main: "#9ece6a",
+        },
+        warning: {
+          main: "#e0af68",
+        },
+        error: {
+          main: "#f7768e",
+        },
+        info: {
+          main: "#7dcfff",
         },
         background: {
-          paper: "#343434bf",
+          paper: "#2f344dc3",
+          default: "#1a1b26",
+        },
+        text: {
+          primary: "#c0caf5",
+          secondary: "#8288a6",
+          disabled: "#565f89",
         },
       },
     },
@@ -17,10 +35,28 @@ const theme = createTheme({
       palette: {
         mode: "light",
         primary: {
-          main: "rgb(245, 182, 6)",
+          main: "#883049",
+        },
+        success: {
+          main: "#587539",
+        },
+        warning: {
+          main: "#c9af3a",
+        },
+        error: {
+          main: "#f52a65",
+        },
+        info: {
+          main: "#4abaaf",
         },
         background: {
-          paper: "#eeeeeed4",
+          paper: "#d2d4def5",
+          default: "#e6e7ed",
+        },
+        text: {
+          primary: "#343b58",
+          secondary: "#6c6e75",
+          disabled: "#848cb5",
         },
       },
     },
@@ -28,10 +64,19 @@ const theme = createTheme({
   shape: {
     borderRadius: 8,
   },
+  shadows: ["none", ...Array.from({ length: 24 }, (_, i) => `0px 4px ${i}px 0px #5959593d`)] as Shadows,
   typography: {
     fontFamily: "'Lato', sans-serif",
     button: {
       textTransform: "initial",
+      fontWeight: 700,
+    },
+    h1: {
+      fontSize: "2.5rem",
+      fontWeight: 700,
+    },
+    h2: {
+      fontSize: "1rem",
       fontWeight: 700,
     },
   },
@@ -96,6 +141,20 @@ const theme = createTheme({
       defaultProps: {
         sx: {
           padding: 2,
+        },
+      },
+    },
+    MuiDialogTitle: {
+      defaultProps: {
+        sx: {
+          fontWeight: 700,
+        },
+      },
+    },
+    MuiFab: {
+      styleOverrides: {
+        root: {
+          boxShadow: "none",
         },
       },
     },

@@ -1,16 +1,19 @@
-import { useState } from "react";
-import { Fab, Paper, Stack, Tab, Tabs, Zoom } from "@mui/material";
+import { Paper, Stack, Tab, Tabs } from "@mui/material";
+import ExpiredExpenseList from "@/components/layout/expired-expense-list";
 import ExpenseList from "@/components/layout/expense-list";
 import ExpenseTotal from "@/components/layout/expense-total";
+import ActionsBar from "@/components/layout/actions-bar";
 import Sidebar from "@/components/layout/sidebar";
 import ExpenseFormDialog from "@/components/dialogs/expense-form-dialog";
-import PlusIcon from "@/components/icons/plus-icon";
+import SettingsDialog from "@/components/dialogs/settings-dialog";
 import useSettingsStore from "@/stores/use-settings-store";
+import useDialog from "@/hooks/use-dialog";
 import { Tab as TabType } from "@/types/global";
 
 const Home = () => {
+  const dialog = useDialog();
+
   const { selectedTab, setSelectedTab } = useSettingsStore();
-  const [showExpenseForm, setShowExpenseForm] = useState(false);
 
   const handleTabChange = (_: React.SyntheticEvent, tab: TabType) => {
     setSelectedTab(tab);
@@ -26,24 +29,15 @@ const Home = () => {
         </Tabs>
       </Stack>
 
+      {selectedTab === "monthly" && <ExpiredExpenseList />}
+
       <ExpenseList />
-
       <ExpenseTotal />
-
       <Sidebar />
+      <ActionsBar />
 
-      <Zoom in>
-        <Fab
-          sx={{ boxShadow: 0, position: "fixed", bottom: 16, right: 16 }}
-          aria-label="Add"
-          color="primary"
-          onClick={() => setShowExpenseForm(true)}
-        >
-          <PlusIcon />
-        </Fab>
-      </Zoom>
-
-      <ExpenseFormDialog open={showExpenseForm} onClose={() => setShowExpenseForm(false)} />
+      <ExpenseFormDialog open={dialog.isOpen("manage-expense-template")} onClose={() => dialog.close("manage-expense-template")} />
+      <SettingsDialog open={dialog.isOpen("global-settings")} onClose={() => dialog.close("global-settings")} />
     </>
   );
 };

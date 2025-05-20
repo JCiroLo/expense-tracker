@@ -10,7 +10,7 @@ const ExpenseTotal = () => {
   const { selectedTab } = useSettingsStore();
 
   const totals = useMemo(() => {
-    const { monthly, annual } = templates.reduce(
+    const { monthly, annual } = templates[selectedTab].reduce(
       (acc, template) => {
         const record = records.indexed[TrackerTools.getRecordKey({ templateId: template.id, type: template.type })] || null;
         const isPaid = Boolean(record);
@@ -39,7 +39,7 @@ const ExpenseTotal = () => {
         paid: monthly.paid + annual.paid,
       },
     };
-  }, [records.indexed, templates]);
+  }, [templates, selectedTab, records.indexed]);
 
   return (
     <Stack
@@ -47,9 +47,8 @@ const ExpenseTotal = () => {
       elevation={0}
       direction="row"
       justifyContent="space-between"
-      width={{ xs: "calc(100% - 64px)", sm: "100%" }}
       padding={1}
-      marginBottom={1}
+      marginBottom={{ xs: 0, sm: 1 }}
       borderRadius={1}
     >
       <Typography variant="subtitle1">Total previsto: {CurrencyTools.format(totals[selectedTab].expected)}</Typography>

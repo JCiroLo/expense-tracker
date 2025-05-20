@@ -9,6 +9,7 @@ const App = () => {
       sx={{
         position: "relative",
         display: "flex",
+        gap: 1,
         flexDirection: "column",
         justifyContent: "center",
         height: "100dvh",
