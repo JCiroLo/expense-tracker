@@ -1,17 +1,20 @@
-import { ThemeProvider as MuiThemeProvider } from "@mui/material/styles";
+import { useMemo } from "react";
+import { ThemeProvider as MuiThemeProvider, PaletteMode } from "@mui/material/styles";
 import { CssBaseline } from "@mui/material";
-
-import theme from "@/themes/theme";
-
-type Theme = "light" | "dark" | "system";
+import createTheme from "@/themes/create-theme";
+import useSettingsStore from "@/stores/use-settings-store";
 
 type ThemeProviderProps = {
   children: React.ReactNode;
-  defaultTheme?: Theme;
+  defaultTheme?: PaletteMode;
   storageKey?: string;
 };
 
-const ThemeProvider: React.FC<ThemeProviderProps> = ({ children, defaultTheme = "system", storageKey = "ui-theme" }) => {
+const ThemeProvider: React.FC<ThemeProviderProps> = ({ children, defaultTheme = "dark", storageKey = "ui-theme" }) => {
+  const accentColor = useSettingsStore((state) => state.accentColor);
+
+  const theme = useMemo(() => createTheme({ accentColor }), [accentColor]);
+
   return (
     <MuiThemeProvider modeStorageKey={storageKey} defaultMode={defaultTheme} theme={theme} noSsr>
       <CssBaseline />

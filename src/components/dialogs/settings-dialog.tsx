@@ -17,21 +17,26 @@ import {
   useColorScheme,
   useMediaQuery,
 } from "@mui/material";
+import ChevronLeftIcon from "@/components/icons/chevron-left-icon";
 import EyeIcon from "@/components/icons/eye-icon";
+import InfoIcon from "@/components/icons/info-icon";
 import UserIcon from "@/components/icons/user-icon";
-import ChevronLeftIcon from "../icons/chevron-left-icon";
+import AccentColorSelector from "@/components/layout/accent-color-selector";
+import useSettingsStore from "@/stores/use-settings-store";
+import type { AccentColor } from "@/types/global";
 
 type SettingsDialogProps = {
   open: boolean;
   onClose: () => void;
 };
 
-type SectionValue = "appearance" | "account";
+type SectionValue = "appearance" | "account" | "about";
 
 type Section = {
   label: string;
   icon: React.ReactNode;
   value: SectionValue | null;
+  disabled: boolean;
 };
 
 const SECTIONS: Record<SectionValue, Section> = {
@@ -39,19 +44,32 @@ const SECTIONS: Record<SectionValue, Section> = {
     label: "Apariencia",
     icon: <EyeIcon />,
     value: "appearance",
+    disabled: false,
   },
   account: {
     label: "Cuenta",
     icon: <UserIcon />,
     value: "account",
+    disabled: true,
+  },
+  about: {
+    label: "Acerca del sitio",
+    icon: <InfoIcon />,
+    value: "about",
+    disabled: true,
   },
 };
 
 const SettingsAppearance = () => {
   const { mode, setMode } = useColorScheme();
+  const { accentColor, setAccentColor } = useSettingsStore();
 
   const handleThemeModeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setMode(event.target.value as "light" | "dark" | "system");
+  };
+
+  const handleAccentColorChange = (color: AccentColor) => {
+    setAccentColor(color);
   };
 
   return (
@@ -67,6 +85,9 @@ const SettingsAppearance = () => {
         sx={{ paddingRight: 14 }}
       >
         <ListItemText primary="Tema" secondary="Personaliza el tema del sitio web" />
+      </ListItem>
+      <ListItem secondaryAction={<AccentColorSelector value={accentColor} onChange={handleAccentColorChange} />} sx={{ paddingRight: 14 }}>
+        <ListItemText primary="Color" secondary={`Elije tu color favorito (${accentColor})`} />
       </ListItem>
     </>
   );
@@ -89,7 +110,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({ open, onClose }) => {
     <Dialog maxWidth="sm" open={open} fullWidth onClose={onClose}>
       <DialogTitle display={{ xs: "none", sm: "block" }}>Ajustes</DialogTitle>
       <DialogTitle display={{ xs: "block", sm: "none" }}>{title}</DialogTitle>
-      <DialogContent sx={{ padding: 2 }}>
+      <DialogContent sx={{ paddingX: 0, paddingY: { xs: 1, sm: 2 } }}>
         <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
           <Tabs
             value={section}
@@ -99,13 +120,13 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({ open, onClose }) => {
             onChange={handleSectionChange}
           >
             {sections.map((section) => (
-              <Tab key={section.value} label={section.label} value={section.value} disabled={section.value === "account"} />
+              <Tab key={section.value} label={section.label} value={section.value} disabled={section.disabled} />
             ))}
           </Tabs>
           <List sx={{ display: !section ? { xs: "initial", sm: "none" } : "none" }} disablePadding>
             {sections.map((section) => (
               <ListItem key={section.value} disablePadding>
-                <ListItemButton disabled={section.value === "account"} onClick={() => setSection(section.value as SectionValue)}>
+                <ListItemButton disabled={section.disabled} onClick={() => setSection(section.value as SectionValue)}>
                   <ListItemIcon sx={{ minWidth: 40 }}>{section.icon}</ListItemIcon>
                   <ListItemText primary={section.label} />
                 </ListItemButton>
@@ -114,15 +135,11 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({ open, onClose }) => {
           </List>
           {section && (
             <List sx={{ flexGrow: 1 }} disablePadding>
-              <Button
-                variant="text"
-                role="listitem"
-                startIcon={<ChevronLeftIcon />}
-                sx={{ display: { xs: "flex", sm: "none" }, padding: 0 }}
-                onClick={() => setSection(null)}
-              >
-                Ajustes
-              </Button>
+              <ListItem sx={{ display: { xs: "flex", sm: "none" } }}>
+                <Button variant="text" startIcon={<ChevronLeftIcon />} sx={{ padding: 0 }} onClick={() => setSection(null)}>
+                  Ajustes
+                </Button>
+              </ListItem>
               {section === "appearance" && <SettingsAppearance />}
             </List>
           )}
