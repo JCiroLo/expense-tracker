@@ -65,7 +65,27 @@ const ExpenseTrackerProvider: React.FC<ExpenseTrackerProviderProps> = ({ childre
     },
   });
 
-  // Here is where the list of expenses should be calculated
+  const records = useMemo(() => {
+    console.log("calculating all records");
+
+    if (!data?.records) {
+      return {
+        indexed: {} as Record<string, ExpenseRecord>,
+        all: [] as ExpenseRecord[],
+      };
+    }
+
+    const indexed = ArrayTools.indexBy(data.records, (record) =>
+      TrackerTools.getRecordKey({
+        templateId: record.templateId,
+        type: record.templateType,
+        date: record.paidAt,
+      })
+    );
+
+    return { indexed, all: data.records };
+  }, [data]);
+
   const templates = useMemo(() => {
     if (!data?.templates) {
       return {
@@ -86,13 +106,14 @@ const ExpenseTrackerProvider: React.FC<ExpenseTrackerProviderProps> = ({ childre
     (sorted.monthly || []).forEach((template) => {
       const dueDate = dayjs().date(template.dueDay).startOf("day");
       const diff = dueDate.diff(today, "day");
+      const paid = records.indexed[TrackerTools.getRecordKey({ templateId: template.id, type: template.type })];
 
-      if (diff <= Env.MAX_DAYS_EXPIRATION_DANGER) {
+      if (diff <= Env.MAX_DAYS_EXPIRATION_DANGER && !paid) {
         expired.push(template);
         return;
       }
 
-      if (diff <= Env.MAX_DAYS_EXPIRATION_WARNING) {
+      if (diff <= Env.MAX_DAYS_EXPIRATION_WARNING && !paid) {
         closeToExpire.push(template);
         return;
       }
@@ -105,27 +126,6 @@ const ExpenseTrackerProvider: React.FC<ExpenseTrackerProviderProps> = ({ childre
       annual: sorted.annual || [],
       all: data.templates,
     };
-  }, [data]);
-
-  const records = useMemo(() => {
-    console.log("calculating all records");
-
-    if (!data?.records) {
-      return {
-        indexed: {} as Record<string, ExpenseRecord>,
-        all: [] as ExpenseRecord[],
-      };
-    }
-
-    const indexed = ArrayTools.indexBy(data.records, (record) =>
-      TrackerTools.getRecordKey({
-        templateId: record.templateId,
-        type: record.templateType,
-        date: record.paidAt,
-      })
-    );
-
-    return { indexed, all: data.records };
   }, [data]);
 
   return (

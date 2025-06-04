@@ -82,11 +82,11 @@ const SettingsAppearance = () => {
             <MenuItem value="system">Sistema</MenuItem>
           </TextField>
         }
-        sx={{ paddingRight: 14 }}
+        sx={{ paddingRight: 16 }}
       >
         <ListItemText primary="Tema" secondary="Personaliza el tema del sitio web" />
       </ListItem>
-      <ListItem secondaryAction={<AccentColorSelector value={accentColor} onChange={handleAccentColorChange} />} sx={{ paddingRight: 14 }}>
+      <ListItem secondaryAction={<AccentColorSelector value={accentColor} onChange={handleAccentColorChange} />} sx={{ paddingRight: 20 }}>
         <ListItemText primary="Color" secondary={`Elije tu color favorito (${accentColor})`} />
       </ListItem>
     </>
