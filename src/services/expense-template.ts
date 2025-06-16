@@ -29,7 +29,7 @@ const $ExpenseTemplate = {
   async update(id: string, template: Partial<Omit<ExpenseTemplate, "id" | "userId">>) {
     await updateDoc(firebase.doc(id), template);
 
-    return Response.success({ id, ...template });
+    return Response.success({ id });
   },
   async delete(id: string) {
     await deleteDoc(firebase.doc(id));

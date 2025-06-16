@@ -16,6 +16,9 @@ import {
   TextField,
   useColorScheme,
   useMediaQuery,
+  Typography,
+  Avatar,
+  Link,
 } from "@mui/material";
 import ChevronLeftIcon from "@/components/icons/chevron-left-icon";
 import EyeIcon from "@/components/icons/eye-icon";
@@ -56,7 +59,7 @@ const SECTIONS: Record<SectionValue, Section> = {
     label: "Acerca del sitio",
     icon: <InfoIcon />,
     value: "about",
-    disabled: true,
+    disabled: false,
   },
 };
 
@@ -93,6 +96,34 @@ const SettingsAppearance = () => {
   );
 };
 
+const SettingsAbout = () => {
+  return (
+    <Stack spacing={4} padding={2}>
+      <Stack>
+        <img src="/logo.png" alt="Antracker" width={32} height={32} />
+        <Typography variant="body2">
+          <Typography component="span" variant="body2">
+            Antracker
+          </Typography>{" "}
+          fue creado con el propósito de simplificar la gestión de gastos y pagos, ofreciendo una herramienta intuitiva y eficiente para el
+          seguimiento financiero personal.
+        </Typography>
+      </Stack>
+      <Stack direction="row" spacing={1} alignItems="center">
+        <Avatar src="/juanciro.jpg" alt="Juan Ciro" />
+        <Stack spacing={0.5}>
+          <Typography component="span" variant="body1" fontWeight="bold" lineHeight={1}>
+            Juan Ciro
+          </Typography>
+          <Link lineHeight={1} href="mailto:juanciro35@gmail.com">
+            juanciro35@gmail.com
+          </Link>
+        </Stack>
+      </Stack>
+    </Stack>
+  );
+};
+
 const SettingsDialog: React.FC<SettingsDialogProps> = ({ open, onClose }) => {
   const isMobile = useMediaQuery((theme) => theme.breakpoints.down("sm"));
 
@@ -115,7 +146,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({ open, onClose }) => {
           <Tabs
             value={section}
             orientation="vertical"
-            sx={{ display: { xs: "none", sm: "initial" }, borderRight: 1, borderColor: "divider" }}
+            sx={{ display: { xs: "none", sm: "initial" }, flexShrink: 0, borderRight: 1, borderColor: "divider" }}
             centered
             onChange={handleSectionChange}
           >
@@ -141,6 +172,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({ open, onClose }) => {
                 </Button>
               </ListItem>
               {section === "appearance" && <SettingsAppearance />}
+              {section === "about" && <SettingsAbout />}
             </List>
           )}
         </Stack>

@@ -36,7 +36,11 @@ const Home = () => {
       <Sidebar />
       <ActionsBar />
 
-      <ExpenseFormDialog open={dialog.isOpen("manage-expense-template")} onClose={() => dialog.close("manage-expense-template")} />
+      <ExpenseFormDialog
+        open={dialog.isOpen("manage-expense-template")}
+        template={dialog.getData("manage-expense-template")}
+        onClose={() => dialog.close("manage-expense-template")}
+      />
       <SettingsDialog open={dialog.isOpen("global-settings")} onClose={() => dialog.close("global-settings")} />
     </>
   );

@@ -5,13 +5,15 @@ import $ExpenseTemplate from "@/services/expense-template";
 import useSessionStore from "@/stores/use-session-store";
 import useExpenseTracker from "@/hooks/use-expense-tracker";
 import { ExpenseType } from "@/types/expense";
+import { ExpenseTemplate } from "@/types/expense";
 
 type ExpenseFormDialogProps = {
   open: boolean;
   onClose: () => void;
+  template?: ExpenseTemplate;
 };
 
-const ExpenseFormDialog: React.FC<ExpenseFormDialogProps> = ({ open, onClose }) => {
+const ExpenseFormDialog: React.FC<ExpenseFormDialogProps> = ({ open, onClose, template }) => {
   const user = useSessionStore((state) => state.user);
   const { refresh } = useExpenseTracker();
 
@@ -37,7 +39,11 @@ const ExpenseFormDialog: React.FC<ExpenseFormDialogProps> = ({ open, onClose }) 
 
     setIsLoading(true);
 
-    await $ExpenseTemplate.create({ title, amount, dueDay, type, userId: user!.uid });
+    if (template) {
+      await $ExpenseTemplate.update(template.id, { title, amount, dueDay, type });
+    } else {
+      await $ExpenseTemplate.create({ title, amount, dueDay, type, userId: user!.uid });
+    }
 
     await refresh();
 
@@ -49,9 +55,9 @@ const ExpenseFormDialog: React.FC<ExpenseFormDialogProps> = ({ open, onClose }) 
   return (
     <Dialog maxWidth="sm" open={open} fullWidth onClose={onClose}>
       <DialogContent>
-        <Stack id="expense-form" component="form" onSubmit={handleSubmit} sx={{ mb: 3, mt: 1 }}>
+        <Stack id="expense-form" component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
           <Stack spacing={2}>
-            <TextField label="Título" name="title" fullWidth required />
+            <TextField label="Título" name="title" fullWidth required defaultValue={template?.title} />
             <NumericFormat
               customInput={TextField}
               label="Monto"
@@ -65,9 +71,10 @@ const ExpenseFormDialog: React.FC<ExpenseFormDialogProps> = ({ open, onClose }) 
               thousandSeparator
               fullWidth
               required
+              defaultValue={template?.amount}
             />
-            <TextField label="Día típico de vencimiento" type="number" name="dueDay" fullWidth required />
-            <TextField label="Tipo" name="type" defaultValue="none" select fullWidth>
+            <TextField label="Día típico de vencimiento" type="number" name="dueDay" fullWidth required defaultValue={template?.dueDay} />
+            <TextField label="Tipo" name="type" defaultValue={template?.type || "none"} select fullWidth>
               <MenuItem value="none" disabled>
                 Seleccionar tipo
               </MenuItem>
@@ -82,7 +89,7 @@ const ExpenseFormDialog: React.FC<ExpenseFormDialogProps> = ({ open, onClose }) 
           Cancelar
         </Button>
         <Button variant="contained" type="submit" form="expense-form" loading={isLoading} fullWidth>
-          Crear
+          {template ? "Editar" : "Crear"}
         </Button>
       </DialogActions>
     </Dialog>

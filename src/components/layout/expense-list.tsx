@@ -6,10 +6,12 @@ import $ExpenseRecord from "@/services/expense-record";
 import TrackerTools from "@/tools/tracker-tools";
 import { ExpenseRecord, ExpenseTemplate } from "@/types/expense";
 import ExpenseListItem from "./expense-list-item";
+import useDialog from "@/hooks/use-dialog";
 
 const ExpenseList = () => {
   const { templates, records, refresh } = useExpenseTracker();
   const selectedTab = useSettingsStore((state) => state.selectedTab);
+  const dialog = useDialog();
 
   const [menuAnchor, setMenuAnchor] = useState({
     template: null as ExpenseTemplate | null,
@@ -119,7 +121,14 @@ const ExpenseList = () => {
           </MenuItem>
         )}
         <Divider />
-        <MenuItem disabled>Editar gasto</MenuItem>
+        <MenuItem
+          onClick={() => {
+            dialog.open("manage-expense-template", menuAnchor.template);
+            handleMenuClose();
+          }}
+        >
+          Editar gasto
+        </MenuItem>
       </Menu>
     </>
   );
