@@ -3,7 +3,6 @@ import { List, Typography, Menu, MenuItem, Divider } from "@mui/material";
 import useExpenseTracker from "@/hooks/use-expense-tracker";
 import useSettingsStore from "@/stores/use-settings-store";
 import $ExpenseRecord from "@/services/expense-record";
-import TrackerTools from "@/tools/tracker-tools";
 import { ExpenseRecord, ExpenseTemplate } from "@/types/expense";
 import ExpenseListItem from "./expense-list-item";
 import useDialog from "@/hooks/use-dialog";
@@ -26,7 +25,7 @@ const ExpenseList = () => {
   const selectedTemplates = useMemo(() => templates[selectedTab], [selectedTab, templates]);
 
   function handleMenuOpen(event: React.MouseEvent<HTMLElement>, template: ExpenseTemplate) {
-    const record = records.indexed[TrackerTools.getRecordKey({ templateId: template.id, type: template.type })] || null;
+    const record = records.indexed[template.id] || null;
     const paid = Boolean(record);
 
     setMenuAnchor({
@@ -53,13 +52,13 @@ const ExpenseList = () => {
 
     const record = await $ExpenseRecord.create({
       templateId: template.id,
-      templateType: template.type,
+      type: template.type,
       userId: template.userId,
-      year: now.getFullYear(),
-      month: now.getMonth() + 1,
+      paidAtYear: now.getFullYear(),
+      paidAtMonth: now.getMonth(),
       paidAt: now,
-      cancelled: false,
-      cancelledAt: null,
+      title: template.title,
+      amount: template.amount,
     });
 
     if (record.ok) {

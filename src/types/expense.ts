@@ -1,22 +1,23 @@
-export type ExpenseType = "monthly" | "annual";
+export type ExpenseType = "monthly" | "annual" | "one-time";
 
 export type ExpenseTemplate = {
-  id: string;
-  userId: string;
-  title: string;
   amount: number;
-  dueDay: number;
+  dueDay: number | null;
+  dueMonth: number | null;
+  id: string;
+  title: string;
   type: ExpenseType;
+  userId: string;
 };
 
 export type ExpenseRecord = {
+  amount: number | null; // Not null for one-time payments
   id: string;
-  templateId: string;
-  templateType: ExpenseType;
-  userId: string;
-  year: number;
-  month: number | null;
   paidAt: Date;
-  cancelled: boolean;
-  cancelledAt: string | null;
+  paidAtMonth: number;
+  paidAtYear: number;
+  templateId: string | null;
+  title: string | null; // Not null for one-time payments
+  type: ExpenseType;
+  userId: string;
 };

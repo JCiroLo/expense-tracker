@@ -6,9 +6,9 @@ import $ExpenseTemplate from "@/services/expense-template";
 import $ExpenseRecord from "@/services/expense-record";
 import useSessionStore from "@/stores/use-session-store";
 import ArrayTools from "@/tools/array-tools";
-import TrackerTools from "@/tools/tracker-tools";
 import Env from "@/lib/env";
 import { ExpenseRecord, ExpenseTemplate } from "@/types/expense";
+import DateTools from "@/tools/date-tools";
 
 type ExpenseTrackerContextType = {
   templates: {
@@ -21,6 +21,7 @@ type ExpenseTrackerContextType = {
   records: {
     indexed: Record<string, ExpenseRecord>;
     all: ExpenseRecord[];
+    oneTime: ExpenseRecord[]; // Pagos únicos del mes actual
   };
   refresh: (options?: RefetchOptions) => Promise<QueryObserverResult>;
 };
@@ -52,7 +53,12 @@ const ExpenseTrackerProvider: React.FC<ExpenseTrackerProviderProps> = ({ childre
 
       const templatesIds = templates.data.map((template) => template.id);
 
-      const records = await $ExpenseRecord.getByTemplate({ userId: user.uid, templateId: templatesIds });
+      const records = await $ExpenseRecord.getByTemplate({
+        userId: user.uid,
+        templateId: templatesIds,
+        month: DateTools.month,
+        year: DateTools.year,
+      });
 
       if (!records.ok) {
         throw records.error;
@@ -72,18 +78,21 @@ const ExpenseTrackerProvider: React.FC<ExpenseTrackerProviderProps> = ({ childre
       return {
         indexed: {} as Record<string, ExpenseRecord>,
         all: [] as ExpenseRecord[],
+        oneTime: [] as ExpenseRecord[],
       };
     }
 
-    const indexed = ArrayTools.indexBy(data.records, (record) =>
-      TrackerTools.getRecordKey({
-        templateId: record.templateId,
-        type: record.templateType,
-        date: record.paidAt,
-      })
+    const indexed = ArrayTools.indexBy(data.records, (record) => record.templateId!);
+
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
+
+    const oneTimeRecords = data.records.filter(
+      (record) => record.type === "one-time" && record.paidAtYear === currentYear && record.paidAtMonth === currentMonth
     );
 
-    return { indexed, all: data.records };
+    return { indexed, all: data.records, oneTime: oneTimeRecords };
   }, [data]);
 
   const templates = useMemo(() => {
@@ -104,9 +113,9 @@ const ExpenseTrackerProvider: React.FC<ExpenseTrackerProviderProps> = ({ childre
     const today = dayjs().startOf("day");
 
     (sorted.monthly || []).forEach((template) => {
-      const dueDate = dayjs().date(template.dueDay).startOf("day");
+      const dueDate = dayjs().date(template.dueDay!).startOf("day");
       const diff = dueDate.diff(today, "day");
-      const paid = records.indexed[TrackerTools.getRecordKey({ templateId: template.id, type: template.type })];
+      const paid = records.indexed[template.id];
 
       if (diff <= Env.MAX_DAYS_EXPIRATION_DANGER && !paid) {
         expired.push(template);
@@ -126,7 +135,7 @@ const ExpenseTrackerProvider: React.FC<ExpenseTrackerProviderProps> = ({ childre
       annual: sorted.annual || [],
       all: data.templates,
     };
-  }, [data]);
+  }, [data, records.indexed]);
 
   return (
     <ExpenseTrackerContext.Provider

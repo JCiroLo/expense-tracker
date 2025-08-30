@@ -8,8 +8,11 @@ import ExpenseTrackerProvider from "@/providers/expense-tracker-provider";
 import ThemeProvider from "@/providers/theme-provider";
 import HighlightProvider from "@/providers/highlight-provider";
 import DialogProvider from "@/providers/dialog-provider";
+import { initDayjs } from "@/lib/dayjs";
 import router from "@/lib/router";
 import queryClient from "@/lib/query-client";
+
+initDayjs();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

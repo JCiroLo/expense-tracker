@@ -4,7 +4,7 @@ import EllipsisIcon from "@/components/icons/ellipsis-icon";
 import useExpenseTracker from "@/hooks/use-expense-tracker";
 import useHighlighter from "@/hooks/use-highlighter";
 import CurrencyTools from "@/tools/currency-tools";
-import TrackerTools from "@/tools/tracker-tools";
+import DateTools from "@/tools/date-tools";
 import { ExpenseTemplate } from "@/types/expense";
 
 type ExpenseListItemProps = {
@@ -18,10 +18,25 @@ const ExpenseListItem: React.FC<ExpenseListItemProps> = ({ template, loading, on
   const { records } = useExpenseTracker();
   const highlighter = useHighlighter();
 
-  const paid = useMemo(
-    () => Boolean(records.indexed[TrackerTools.getRecordKey({ templateId: template.id, type: template.type })]),
-    [template.id, template.type, records.indexed]
-  );
+  const record = useMemo(() => records.indexed[template.id], [template.id, records.indexed]);
+
+  const helperText = useMemo(() => {
+    if (record) {
+      return `Pagado el ${DateTools.format(record.paidAt, "d [de] MMMM [del] YYYY")}`;
+    }
+
+    if (template.type === "monthly") {
+      return `Día de vencimiento: ${template.dueDay} de ${DateTools.monthName()}`;
+    }
+
+    if (template.type === "annual") {
+      return `Mes de vencimiento: ${DateTools.monthName(template.dueMonth!)}`;
+    }
+
+    return "Pago único";
+  }, [template, record]);
+
+  const paid = Boolean(record);
 
   return (
     <ListItem
@@ -42,10 +57,7 @@ const ExpenseListItem: React.FC<ExpenseListItemProps> = ({ template, loading, on
       >
         {loading ? <CircularProgress size={42} sx={{ padding: "9px" }} /> : <Checkbox checked={paid} tabIndex={-1} disableRipple />}
 
-        <ListItemText
-          primary={`${template.title} - ${CurrencyTools.format(template.amount)}`}
-          secondary={`Día de vencimiento: ${template.dueDay}`}
-        />
+        <ListItemText primary={`${template.title} - ${CurrencyTools.format(template.amount)}`} secondary={helperText} />
       </ListItemButton>
     </ListItem>
   );

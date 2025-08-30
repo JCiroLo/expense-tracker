@@ -3,16 +3,15 @@ import { Paper, Stack, Typography } from "@mui/material";
 import useExpenseTracker from "@/hooks/use-expense-tracker";
 import useSettingsStore from "@/stores/use-settings-store";
 import CurrencyTools from "@/tools/currency-tools";
-import TrackerTools from "@/tools/tracker-tools";
 
 const ExpenseTotal = () => {
   const { templates, records } = useExpenseTracker();
   const { selectedTab } = useSettingsStore();
 
   const totals = useMemo(() => {
-    const { monthly, annual } = templates[selectedTab].reduce(
+    const { monthly, annual, oneTime } = templates[selectedTab].reduce(
       (acc, template) => {
-        const record = records.indexed[TrackerTools.getRecordKey({ templateId: template.id, type: template.type })] || null;
+        const record = records.indexed[template.id] || null;
         const isPaid = Boolean(record);
         const amount = template.amount;
 
@@ -28,18 +27,23 @@ const ExpenseTotal = () => {
 
         return acc;
       },
-      { monthly: { expected: 0, paid: 0 }, annual: { expected: 0, paid: 0 } }
+      { monthly: { expected: 0, paid: 0 }, annual: { expected: 0, paid: 0 }, oneTime: { expected: 0, paid: 0 } }
     );
+
+    records.oneTime.forEach((record) => {
+      oneTime.paid += record.amount || 0;
+    });
 
     return {
       monthly,
       annual,
+      oneTime,
       all: {
-        expected: monthly.expected + annual.expected,
-        paid: monthly.paid + annual.paid,
+        expected: monthly.expected + annual.expected + oneTime.expected,
+        paid: monthly.paid + annual.paid + oneTime.paid,
       },
     };
-  }, [templates, selectedTab, records.indexed]);
+  }, [templates, selectedTab, records.indexed, records.oneTime]);
 
   return (
     <Stack
