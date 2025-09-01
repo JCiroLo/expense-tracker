@@ -1,6 +1,7 @@
 import { Outlet } from "react-router";
 import { Slide } from "@mui/material";
 import ExpenseFormDialog from "@/components/dialogs/expense-form-dialog";
+import RemoveExpenseDialog from "@/components/dialogs/remove-expense-dialog";
 import SettingsDialog from "@/components/dialogs/settings-dialog";
 import ActionsBar from "@/components/layout/actions-bar";
 import NavigationTabs from "@/components/layout/navigation-tabs";
@@ -27,6 +28,11 @@ const AppWrapper = () => {
         open={dialog.isOpen("manage-expense-template")}
         template={dialog.getData("manage-expense-template")}
         onClose={() => dialog.close("manage-expense-template")}
+      />
+      <RemoveExpenseDialog
+        open={dialog.isOpen("remove-expense-template")}
+        template={dialog.getData("remove-expense-template")}
+        onClose={() => dialog.close("remove-expense-template")}
       />
       <SettingsDialog open={dialog.isOpen("global-settings")} onClose={() => dialog.close("global-settings")} />
     </PageContainer>

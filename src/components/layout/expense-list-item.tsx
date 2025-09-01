@@ -41,7 +41,7 @@ const ExpenseListItem: React.FC<ExpenseListItemProps> = ({ template, loading, on
   return (
     <ListItem
       secondaryAction={
-        <IconButton edge="end" onClick={(event) => onMenu(event, template)}>
+        <IconButton edge="end" color="inherit" onClick={(event) => onMenu(event, template)}>
           <EllipsisIcon />
         </IconButton>
       }

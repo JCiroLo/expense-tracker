@@ -128,6 +128,15 @@ const ExpenseList = () => {
         >
           Editar gasto
         </MenuItem>
+        <MenuItem
+          sx={{ color: "error.main" }}
+          onClick={() => {
+            dialog.open("remove-expense-template", menuAnchor.template);
+            handleMenuClose();
+          }}
+        >
+          Eliminar gasto
+        </MenuItem>
       </Menu>
     </>
   );

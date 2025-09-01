@@ -1,7 +1,7 @@
 import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, orderBy, query, updateDoc, where } from "firebase/firestore";
 import { assignTypes, db } from "@/lib/firebase";
 import Response from "@/lib/response";
-import { ExpenseTemplate } from "@/types/expense";
+import type { ExpenseTemplate } from "@/types/expense";
 
 const firebase = {
   collection: collection(db, "expense-templates").withConverter(assignTypes<ExpenseTemplate>()),
