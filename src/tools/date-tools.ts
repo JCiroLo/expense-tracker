@@ -5,6 +5,12 @@ const DateTools = {
   get now() {
     return new Date();
   },
+  get day() {
+    return new Date().getDate();
+  },
+  get daysInMonth() {
+    return dayjs().daysInMonth();
+  },
   get month() {
     return new Date().getMonth();
   },

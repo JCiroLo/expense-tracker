@@ -1,6 +1,7 @@
 import { Box, Stack, Typography } from "@mui/material";
+import { forwardRef } from "react";
 
-const Sidebar = () => {
+const Sidebar = forwardRef<HTMLDivElement>((_, ref) => {
   // const { mode, setMode } = useColorScheme();
 
   // const handleSwitchTheme = () => {
@@ -9,6 +10,7 @@ const Sidebar = () => {
 
   return (
     <Stack
+      ref={ref}
       component="aside"
       display={{ xs: "none", sm: "flex" }}
       position="fixed"
@@ -34,6 +36,6 @@ const Sidebar = () => {
       </Stack>
     </Stack>
   );
-};
+});
 
 export default Sidebar;

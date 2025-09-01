@@ -1,11 +1,12 @@
 import React from "react";
 import { Navigate } from "react-router";
 import useSessionStore from "@/stores/use-session-store";
+import type { RouteScope } from "@/types/global";
 
 type PrivateRouteProps<Props> = {
   component: React.ComponentType<Props>;
   componentProps?: Props;
-  scopes?: ("REQUIRES_AUTH" | "HIDE_FOR_AUTH")[];
+  scopes?: RouteScope[];
 };
 
 const PrivateRoute = <P extends React.JSX.IntrinsicAttributes>({

@@ -1,7 +1,11 @@
-import { Outlet } from "react-router";
+import React from "react";
 import { Container } from "@mui/material";
 
-const App = () => {
+type PageContainerProps = {
+  children: React.ReactNode;
+};
+
+const PageContainer: React.FC<PageContainerProps> = ({ children }) => {
   return (
     <Container
       component="main"
@@ -14,11 +18,12 @@ const App = () => {
         justifyContent: "center",
         height: "100dvh",
         paddingX: 1,
+        overflowY: "hidden",
       }}
     >
-      <Outlet />
+      {children}
     </Container>
   );
 };
 
-export default App;
+export default PageContainer;
