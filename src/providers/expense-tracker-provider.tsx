@@ -2,13 +2,14 @@ import React, { useMemo } from "react";
 import { QueryObserverResult, RefetchOptions, useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import Loader from "@/components/layout/loader";
-import $ExpenseTemplate from "@/services/expense-template";
+import $ExpenseCategory from "@/services/expense-category";
 import $ExpenseRecord from "@/services/expense-record";
+import $ExpenseTemplate from "@/services/expense-template";
 import useSessionStore from "@/stores/use-session-store";
 import ArrayTools from "@/tools/array-tools";
-import Env from "@/lib/env";
-import { ExpenseRecord, ExpenseTemplate } from "@/types/expense";
 import DateTools from "@/tools/date-tools";
+import Env from "@/lib/env";
+import type { ExpenseCategory, ExpenseRecord, ExpenseTemplate } from "@/types/expense";
 
 type ExpenseTrackerContextType = {
   templates: {
@@ -23,6 +24,7 @@ type ExpenseTrackerContextType = {
     all: ExpenseRecord[];
     oneTime: ExpenseRecord[]; // Pagos únicos del mes actual
   };
+  categories: ExpenseCategory[];
   refresh: (options?: RefetchOptions) => Promise<QueryObserverResult>;
 };
 
@@ -64,9 +66,12 @@ const ExpenseTrackerProvider: React.FC<ExpenseTrackerProviderProps> = ({ childre
         throw records.error;
       }
 
+      const categories = await $ExpenseCategory.getAll({ userId: user.uid });
+
       return {
         templates: templates.data,
         records: records.data,
+        categories: categories.ok ? categories.data : [],
       };
     },
   });
@@ -137,11 +142,20 @@ const ExpenseTrackerProvider: React.FC<ExpenseTrackerProviderProps> = ({ childre
     };
   }, [data, records.indexed]);
 
+  const categories = useMemo(() => {
+    if (!data?.categories) {
+      return [];
+    }
+
+    return data.categories;
+  }, [data]);
+
   return (
     <ExpenseTrackerContext.Provider
       value={{
         templates,
         records,
+        categories,
         refresh: refetch,
       }}
     >

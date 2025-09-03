@@ -1,12 +1,24 @@
 import React from "react";
-import { TextField, Button, MenuItem, Stack, Dialog, DialogContent, DialogActions, InputAdornment, DialogTitle } from "@mui/material";
+import {
+  TextField,
+  Button,
+  MenuItem,
+  Stack,
+  Dialog,
+  DialogContent,
+  DialogActions,
+  InputAdornment,
+  DialogTitle,
+  Divider,
+} from "@mui/material";
 import { NumericFormat } from "react-number-format";
+import useExpenseTracker from "@/hooks/use-expense-tracker";
+import $ExpenseCategory from "@/services/expense-category";
 import $ExpenseTemplate from "@/services/expense-template";
 import useSessionStore from "@/stores/use-session-store";
-import useExpenseTracker from "@/hooks/use-expense-tracker";
-import { ExpenseType } from "@/types/expense";
-import { ExpenseTemplate } from "@/types/expense";
 import DateTools from "@/tools/date-tools";
+import type { ExpenseType } from "@/types/expense";
+import type { ExpenseTemplate } from "@/types/expense";
 
 type ExpenseFormDialogProps = {
   open: boolean;
@@ -16,13 +28,22 @@ type ExpenseFormDialogProps = {
 
 const ExpenseFormDialog: React.FC<ExpenseFormDialogProps> = ({ open, onClose, template }) => {
   const user = useSessionStore((state) => state.user);
-  const { refresh } = useExpenseTracker();
+  const { categories, refresh } = useExpenseTracker();
 
   const [type, setType] = React.useState<ExpenseType | "none">("none");
+  const [category, setCategory] = React.useState<string | "add-category" | "none">(template?.categoryId || "none");
   const [isLoading, setIsLoading] = React.useState(false);
 
   function handleTypeChange(event: React.ChangeEvent<HTMLInputElement>) {
-    setType(event.target.value as ExpenseType | "none");
+    const value = event.target.value as ExpenseType | "none";
+
+    setType(value);
+  }
+
+  function handleCategoryChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const value = event.target.value;
+
+    setCategory(value);
   }
 
   async function handleSubmit(event: React.FormEvent) {
@@ -35,6 +56,8 @@ const ExpenseFormDialog: React.FC<ExpenseFormDialogProps> = ({ open, onClose, te
     const type = formData.get("type") as ExpenseType | "none";
     const rawAmount = formData.get("amount") as string;
     const amount = Number(rawAmount.replaceAll(",", ""));
+    const categoryId = formData.get("categoryId") as string;
+    const categoryName = formData.get("categoryName") as string;
 
     if (Number.isNaN(amount)) {
       return;
@@ -52,12 +75,32 @@ const ExpenseFormDialog: React.FC<ExpenseFormDialogProps> = ({ open, onClose, te
       return;
     }
 
+    if (categoryId === "add-category" && !categoryName) {
+      return;
+    }
+
     setIsLoading(true);
 
+    let newCategoryId = categoryId;
+
+    if (categoryId === "add-category") {
+      const response = await $ExpenseCategory.create({ name: categoryName, color: "#000000", userId: user!.uid });
+
+      if (!response.ok) {
+        setIsLoading(false);
+
+        // TODO: show error and try again message
+        return;
+      }
+
+      newCategoryId = response.data.id;
+    }
+
     if (template) {
+      // TODO: update categoryId if changed
       await $ExpenseTemplate.update(template.id, { title, amount, dueDay, dueMonth, type });
     } else {
-      await $ExpenseTemplate.create({ title, amount, dueDay, dueMonth, type, userId: user!.uid });
+      await $ExpenseTemplate.create({ title, amount, dueDay, dueMonth, type, categoryId: newCategoryId, userId: user!.uid });
     }
 
     await refresh();
@@ -135,6 +178,21 @@ const ExpenseFormDialog: React.FC<ExpenseFormDialogProps> = ({ open, onClose, te
                     ))}
                   </TextField>
                 )}
+              </>
+            )}
+            <TextField label="Categoría" name="categoryId" value={category} select fullWidth onChange={handleCategoryChange}>
+              <MenuItem value="none">Sin categoría</MenuItem>
+              {categories.map((category) => (
+                <MenuItem key={category.id} value={category.id} color={category.color}>
+                  {category.name}
+                </MenuItem>
+              ))}
+              <Divider />
+              <MenuItem value="add-category">Agregar categoría</MenuItem>
+            </TextField>
+            {category === "add-category" && (
+              <>
+                <TextField label="Nombre de la categoría" name="categoryName" fullWidth required />
               </>
             )}
           </Stack>
