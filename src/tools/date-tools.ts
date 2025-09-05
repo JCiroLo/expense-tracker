@@ -1,5 +1,4 @@
 import dayjs from "dayjs";
-import { Timestamp } from "firebase/firestore";
 
 const DateTools = {
   get now() {
@@ -24,16 +23,10 @@ const DateTools = {
     return new Date().getFullYear();
   },
   format(date: Date | string, format: string) {
-    return dayjs(this.timestampToDate(date)).format(format);
+    return dayjs(date).format(format);
   },
   monthName(monthIndex: number = dayjs().month()) {
     return dayjs().month(monthIndex).format("MMMM");
-  },
-  timestampToDate(timestamp: Date | string | Timestamp) {
-    if (timestamp instanceof Timestamp) {
-      return timestamp.toDate();
-    }
-    return timestamp;
   },
 };
 

@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { AccentColor, Tab } from "@/types/global";
+import type { AccentColor, Tab } from "@/types/global";
 
 type SettingsState = {
   selectedTab: Tab;

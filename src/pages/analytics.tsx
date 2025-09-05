@@ -42,10 +42,6 @@ const Analytics = () => {
       paid: values.monthly.paid + values.annual.paid + values.oneTime.paid,
     };
 
-    records.oneTime.forEach((record) => {
-      values.oneTime.paid += record.amount || 0;
-    });
-
     const percentages = {
       monthly: values.monthly.expected === 0 ? 100 : (values.monthly.paid / values.monthly.expected) * 100,
       annual: values.annual.expected === 0 ? 100 : (values.annual.paid / values.annual.expected) * 100,

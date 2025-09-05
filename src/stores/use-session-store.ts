@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { signOut, User } from "firebase/auth";
+import { signOut, type User } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 
 type SessionState = {

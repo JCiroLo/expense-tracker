@@ -1,5 +1,5 @@
-import { PaletteMode } from "@mui/material";
-import { AccentColor } from "@/types/global";
+import type { PaletteMode } from "@mui/material";
+import type { AccentColor } from "@/types/global";
 
 const Colors: Record<PaletteMode, Record<AccentColor, string>> = {
   dark: {

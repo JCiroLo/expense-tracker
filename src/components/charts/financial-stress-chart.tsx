@@ -22,7 +22,7 @@ const FinancialStressChart: React.FC = () => {
       xAxis = data.map((_, index) => String(index + 1));
 
       templates[selectedTab].map((template) => {
-        data[(template.dueDay || 0) - 1] += template.amount;
+        data[(template.due_day || 0) - 1] += template.amount;
       });
     } else if (selectedTab === "annual") {
       data = Array.from({ length: 12 }, () => 0);
@@ -30,7 +30,7 @@ const FinancialStressChart: React.FC = () => {
       xAxis = DateTools.months.map((month) => month.name);
 
       templates[selectedTab].map((template) => {
-        data[(template.dueMonth || 0) - 1] += template.amount;
+        data[(template.due_month || 0) - 1] += template.amount;
       });
     }
 
@@ -56,7 +56,6 @@ const FinancialStressChart: React.FC = () => {
       clipAreaOffset={{ top: 2, bottom: 2 }}
       axisHighlight={{ x: "line" }}
       color={theme.palette.primary.main}
-      
       slotProps={{
         lineHighlight: { r: 4 },
       }}

@@ -1,38 +1,67 @@
-import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, orderBy, query, updateDoc, where } from "firebase/firestore";
-import { assignTypes, db } from "@/lib/firebase";
+import supabase from "@/lib/supabase";
 import Response from "@/lib/response";
+import ArrayTools from "@/tools/array-tools";
 import type { ExpenseTemplate } from "@/types/expense";
-
-const firebase = {
-  collection: collection(db, "expense-templates").withConverter(assignTypes<ExpenseTemplate>()),
-  doc: (id: string) => doc(db, "expense-templates", id),
-};
 
 const $ExpenseTemplate = {
   async get(id: string) {
-    const snapshot = await getDoc(firebase.doc(id));
+    const { data, error } = await supabase.from("expense_templates").select("*").eq("id", id).single();
 
-    return Response.success(snapshot.data());
+    if (error) {
+      return Response.error(error);
+    }
+
+    return Response.success(data as ExpenseTemplate);
   },
   async getAll({ userId }: { userId: string }) {
-    const q = query(firebase.collection, where("userId", "==", userId), orderBy("dueDay", "desc"));
+    const { data, error } = await supabase
+      .from("expense_templates")
+      .select("*")
+      .eq("user_id", userId)
+      .neq("type", "one-time")
+      .order("due_day", { ascending: false });
 
-    const snapshot = await getDocs(q);
+    if (error) {
+      return Response.error(error);
+    }
 
-    return Response.success(snapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id })));
+    return Response.success(data as ExpenseTemplate[]);
+  },
+  async getAllIndexed({ userId }: { userId: string }) {
+    const { data, error } = await this.getAll({ userId });
+
+    if (error) {
+      return Response.error(error);
+    }
+
+    const indexed = ArrayTools.indexBy(data, (template) => template.id);
+
+    return Response.success(indexed as Record<string, ExpenseTemplate>);
   },
   async create(template: Omit<ExpenseTemplate, "id">) {
-    const docRef = await addDoc(firebase.collection, template);
+    const { data, error } = await supabase.from("expense_templates").insert(template).select().single();
 
-    return Response.success({ id: docRef.id, ...template });
+    if (error) {
+      return Response.error(error);
+    }
+
+    return Response.success(data as ExpenseTemplate);
   },
   async update(id: string, template: Partial<Omit<ExpenseTemplate, "id" | "userId">>) {
-    await updateDoc(firebase.doc(id), template);
+    const { error } = await supabase.from("expense_templates").update(template).eq("id", id);
+
+    if (error) {
+      return Response.error(error);
+    }
 
     return Response.success({ id });
   },
   async delete(id: string) {
-    await deleteDoc(firebase.doc(id));
+    const { error } = await supabase.from("expense_templates").delete().eq("id", id);
+
+    if (error) {
+      return Response.error(error);
+    }
 
     return Response.success({ id });
   },

@@ -1,38 +1,50 @@
-import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, orderBy, query, updateDoc, where } from "firebase/firestore";
-import { assignTypes, db } from "@/lib/firebase";
+import supabase from "@/lib/supabase";
 import Response from "@/lib/response";
 import type { ExpenseCategory } from "@/types/expense";
 
-const firebase = {
-  collection: collection(db, "expense-categories").withConverter(assignTypes<ExpenseCategory>()),
-  doc: (id: string) => doc(db, "expense-categories", id),
-};
-
 const $ExpenseCategory = {
   async get(id: string) {
-    const snapshot = await getDoc(firebase.doc(id));
+    const { data, error } = await supabase.from("expense_categories").select("*").eq("id", id).single();
 
-    return Response.success(snapshot.data());
+    if (error) {
+      return Response.error(error);
+    }
+
+    return Response.success(data as ExpenseCategory);
   },
   async getAll({ userId }: { userId: string }) {
-    const q = query(firebase.collection, where("userId", "==", userId), orderBy("name", "asc"));
+    const { data, error } = await supabase.from("expense_categories").select("*").eq("user_id", userId).order("name", { ascending: true });
 
-    const snapshot = await getDocs(q);
+    if (error) {
+      return Response.error(error);
+    }
 
-    return Response.success(snapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id })));
+    return Response.success(data as ExpenseCategory[]);
   },
   async create(category: Omit<ExpenseCategory, "id">) {
-    const docRef = await addDoc(firebase.collection, category);
+    const { data, error } = await supabase.from("expense_categories").insert(category).select().single();
 
-    return Response.success({ id: docRef.id, ...category });
+    if (error) {
+      return Response.error(error);
+    }
+
+    return Response.success(data as ExpenseCategory);
   },
   async update(id: string, category: Partial<Omit<ExpenseCategory, "id" | "userId">>) {
-    await updateDoc(firebase.doc(id), category);
+    const { data, error } = await supabase.from("expense_categories").update(category).eq("id", id).select().single();
 
-    return Response.success({ id });
+    if (error) {
+      return Response.error(error);
+    }
+
+    return Response.success(data as ExpenseCategory);
   },
   async delete(id: string) {
-    await deleteDoc(firebase.doc(id));
+    const { error } = await supabase.from("expense_categories").delete().eq("id", id);
+
+    if (error) {
+      return Response.error(error);
+    }
 
     return Response.success({ id });
   },

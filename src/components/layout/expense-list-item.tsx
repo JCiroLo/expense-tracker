@@ -5,7 +5,7 @@ import useExpenseTracker from "@/hooks/use-expense-tracker";
 import useHighlighter from "@/hooks/use-highlighter";
 import CurrencyTools from "@/tools/currency-tools";
 import DateTools from "@/tools/date-tools";
-import { ExpenseTemplate } from "@/types/expense";
+import type { ExpenseTemplate } from "@/types/expense";
 
 type ExpenseListItemProps = {
   template: ExpenseTemplate;
@@ -22,15 +22,15 @@ const ExpenseListItem: React.FC<ExpenseListItemProps> = ({ template, loading, on
 
   const helperText = useMemo(() => {
     if (record) {
-      return `Pagado el ${DateTools.format(record.paidAt, "d [de] MMMM [del] YYYY")}`;
+      return `Pagado el ${DateTools.format(record.paid_at, "d [de] MMMM [del] YYYY")}`;
     }
 
     if (template.type === "monthly") {
-      return `Día de vencimiento: ${template.dueDay} de ${DateTools.monthName()}`;
+      return `Día de vencimiento: ${template.due_day} de ${DateTools.monthName()}`;
     }
 
     if (template.type === "annual") {
-      return `Mes de vencimiento: ${DateTools.monthName(template.dueMonth!)}`;
+      return `Mes de vencimiento: ${DateTools.monthName(template.due_month!)}`;
     }
 
     return "Pago único";

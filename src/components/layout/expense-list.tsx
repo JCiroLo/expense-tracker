@@ -1,11 +1,11 @@
 import { useMemo, useState } from "react";
 import { List, Typography, Menu, MenuItem, Divider } from "@mui/material";
+import ExpenseListItem from "@/components/layout/expense-list-item";
+import useDialog from "@/hooks/use-dialog";
 import useExpenseTracker from "@/hooks/use-expense-tracker";
 import useSettingsStore from "@/stores/use-settings-store";
 import $ExpenseRecord from "@/services/expense-record";
-import { ExpenseRecord, ExpenseTemplate } from "@/types/expense";
-import ExpenseListItem from "./expense-list-item";
-import useDialog from "@/hooks/use-dialog";
+import type { ExpenseRecord, ExpenseTemplate } from "@/types/expense";
 
 const ExpenseList = () => {
   const { templates, records, refresh } = useExpenseTracker();
@@ -51,17 +51,15 @@ const ExpenseList = () => {
     setIsLoading((prev) => ({ ...prev, template }));
 
     const record = await $ExpenseRecord.create({
-      templateId: template.id,
-      type: template.type,
-      userId: template.userId,
-      paidAtYear: now.getFullYear(),
-      paidAtMonth: now.getMonth(),
-      paidAt: now,
-      title: template.title,
-      amount: template.amount,
+      category_id: template.category_id,
+      paid_at_month: now.getMonth(),
+      paid_at_year: now.getFullYear(),
+      paid_at: now,
+      template_id: template.id,
+      user_id: template.user_id,
     });
 
-    if (record.ok) {
+    if (!record.error) {
       await refresh();
     }
 
@@ -73,7 +71,7 @@ const ExpenseList = () => {
 
     const response = await $ExpenseRecord.delete(record.id);
 
-    if (response.ok) {
+    if (!response.error) {
       await refresh();
     }
 

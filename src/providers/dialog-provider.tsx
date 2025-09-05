@@ -1,5 +1,5 @@
 import React from "react";
-import { Dialog } from "@/types/global";
+import type { Dialog } from "@/types/global";
 
 type DialogContextType = {
   queue: Record<Dialog, { open: boolean; data?: unknown }>;

@@ -13,11 +13,14 @@ import {
 } from "@mui/material";
 import { NumericFormat } from "react-number-format";
 import useExpenseTracker from "@/hooks/use-expense-tracker";
+import ExpenseCategoryForm, { type ExpenseCategoryFormObject } from "@/forms/expense-category-form";
+import ExpenseTemplateForm, { type ExpenseTemplateFormObject } from "@/forms/expense-template-form";
 import $ExpenseCategory from "@/services/expense-category";
 import $ExpenseTemplate from "@/services/expense-template";
+import $ExpenseRecord from "@/services/expense-record";
 import useSessionStore from "@/stores/use-session-store";
 import DateTools from "@/tools/date-tools";
-import type { ExpenseType } from "@/types/expense";
+import type { ExpenseCategory, ExpenseType } from "@/types/expense";
 import type { ExpenseTemplate } from "@/types/expense";
 
 type ExpenseFormDialogProps = {
@@ -31,7 +34,7 @@ const ExpenseFormDialog: React.FC<ExpenseFormDialogProps> = ({ open, onClose, te
   const { categories, refresh } = useExpenseTracker();
 
   const [type, setType] = React.useState<ExpenseType | "none">("none");
-  const [category, setCategory] = React.useState<string | "add-category" | "none">(template?.categoryId || "none");
+  const [category, setCategory] = React.useState<string | "add-category" | "none">(template?.category_id || "none");
   const [isLoading, setIsLoading] = React.useState(false);
 
   function handleTypeChange(event: React.ChangeEvent<HTMLInputElement>) {
@@ -46,61 +49,143 @@ const ExpenseFormDialog: React.FC<ExpenseFormDialogProps> = ({ open, onClose, te
     setCategory(value);
   }
 
-  async function handleSubmit(event: React.FormEvent) {
-    event.preventDefault();
+  async function handleCategoryCreation(formData: ExpenseCategoryFormObject) {
+    const response = await $ExpenseCategory.create({ name: formData.name, color: formData.color, user_id: user!.uid });
 
-    const formData = new FormData(event.target as HTMLFormElement);
-    const title = formData.get("title") as string;
-    const dueDay = Number(formData.get("dueDay")) || null;
-    const dueMonth = Number(formData.get("dueMonth")) || null;
-    const type = formData.get("type") as ExpenseType | "none";
-    const rawAmount = formData.get("amount") as string;
-    const amount = Number(rawAmount.replaceAll(",", ""));
-    const categoryId = formData.get("categoryId") as string;
-    const categoryName = formData.get("categoryName") as string;
-
-    if (Number.isNaN(amount)) {
-      return;
+    if (response.error) {
+      // TODO: show error and try again message
+      return null;
     }
 
-    if (!title || !amount || !type || type === "none") {
-      return;
+    return response.data;
+  }
+
+  async function handleOneTimeCreation(formData: ExpenseTemplateFormObject) {
+    const template = await $ExpenseTemplate.create({
+      amount: formData.amount,
+      category_id: formData.categoryId,
+      due_day: DateTools.day,
+      due_month: DateTools.month,
+      title: formData.title,
+      type: formData.type,
+      user_id: user!.uid,
+    });
+
+    if (template.error) {
+      // TODO: show error and try again message
+      return null;
     }
 
-    if (type === "monthly" && !dueDay) {
-      return;
+    const record = await $ExpenseRecord.create({
+      category_id: formData.categoryId,
+      paid_at: DateTools.now,
+      paid_at_month: DateTools.month,
+      paid_at_year: DateTools.year,
+      template_id: template.data.id,
+      user_id: user!.uid,
+    });
+
+    if (record.error) {
+      return null;
     }
 
-    if (type === "annual" && !dueMonth) {
+    return {
+      template: template.data,
+      record: record.data,
+    };
+  }
+
+  async function handleTemplateCreation(formData: ExpenseTemplateFormObject) {
+    if (type === "none") {
       return;
-    }
-
-    if (categoryId === "add-category" && !categoryName) {
-      return;
-    }
-
-    setIsLoading(true);
-
-    let newCategoryId = categoryId;
-
-    if (categoryId === "add-category") {
-      const response = await $ExpenseCategory.create({ name: categoryName, color: "#000000", userId: user!.uid });
-
-      if (!response.ok) {
-        setIsLoading(false);
-
-        // TODO: show error and try again message
-        return;
-      }
-
-      newCategoryId = response.data.id;
     }
 
     if (template) {
-      // TODO: update categoryId if changed
-      await $ExpenseTemplate.update(template.id, { title, amount, dueDay, dueMonth, type });
+      await $ExpenseTemplate.update(template.id, {
+        type,
+        amount: formData.amount,
+        category_id: formData.categoryId,
+        due_day: formData.dueDay,
+        due_month: formData.dueMonth,
+        title: formData.title,
+      });
     } else {
-      await $ExpenseTemplate.create({ title, amount, dueDay, dueMonth, type, categoryId: newCategoryId, userId: user!.uid });
+      await $ExpenseTemplate.create({
+        type,
+        amount: formData.amount,
+        category_id: formData.categoryId,
+        due_day: formData.dueDay,
+        due_month: formData.dueMonth,
+        title: formData.title,
+        user_id: user!.uid,
+      });
+    }
+  }
+
+  async function handleSubmit(event: React.FormEvent) {
+    event.preventDefault();
+
+    let newCategory: ExpenseCategory | null = null;
+    const formData = new FormData(event.target as HTMLFormElement);
+    const formCategory = ExpenseCategoryForm.toObject(formData);
+    const formTemplate = ExpenseTemplateForm.toObject(formData);
+
+    // Step 1: validate form
+
+    if (Number.isNaN(formTemplate.amount)) {
+      return;
+    }
+
+    if (!formTemplate.title || !formTemplate.amount || !type || type === "none") {
+      return;
+    }
+
+    if (type === "monthly" && !formTemplate.dueDay) {
+      return;
+    }
+
+    if (type === "annual" && !formTemplate.dueMonth) {
+      return;
+    }
+
+    // Step 2: create category if needed
+
+    if (formTemplate.categoryId === "add-category") {
+      // Step 2a: validate category form
+
+      if (!formCategory.name) {
+        return;
+      }
+
+      setIsLoading(true);
+
+      // Step 2b: create category
+
+      newCategory = await handleCategoryCreation(formCategory);
+
+      if (!newCategory) {
+        setIsLoading(false);
+        // TODO: show error and try again message
+        return;
+      }
+    }
+
+    // Step 3: create or update template
+
+    setIsLoading(true);
+
+    const categoryId = newCategory ? newCategory.id : formTemplate.categoryId === "none" ? null : formTemplate.categoryId;
+
+    if (type === "one-time") {
+      const response = await handleOneTimeCreation({ ...formTemplate, categoryId });
+
+      if (!response) {
+        setIsLoading(false);
+        // TODO: show error and try again message
+        return;
+      }
+    } else {
+      await handleTemplateCreation({ ...formTemplate, categoryId });
     }
 
     await refresh();
@@ -113,8 +198,10 @@ const ExpenseFormDialog: React.FC<ExpenseFormDialogProps> = ({ open, onClose, te
   React.useEffect(() => {
     if (template) {
       setType(template.type);
+      setCategory(template.category_id || "none");
     } else {
       setType("none");
+      setCategory("none");
     }
   }, [template]);
 
@@ -124,11 +211,11 @@ const ExpenseFormDialog: React.FC<ExpenseFormDialogProps> = ({ open, onClose, te
       <DialogContent>
         <Stack id="expense-form" component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
           <Stack spacing={2}>
-            <TextField label="Título" name="title" fullWidth required defaultValue={template?.title} />
+            <TextField label="Título" name={ExpenseTemplateForm.formKeys.title} fullWidth required defaultValue={template?.title} />
             <NumericFormat
               customInput={TextField}
               label="Monto"
-              name="amount"
+              name={ExpenseTemplateForm.formKeys.amount}
               sx={{ width: "100%" }}
               slotProps={{
                 input: {
@@ -140,13 +227,21 @@ const ExpenseFormDialog: React.FC<ExpenseFormDialogProps> = ({ open, onClose, te
               required
               defaultValue={template?.amount}
             />
-            <TextField label="Tipo" name="type" value={type} select fullWidth required onChange={handleTypeChange}>
+            <TextField
+              label="Tipo"
+              name={ExpenseTemplateForm.formKeys.type}
+              value={type}
+              select
+              fullWidth
+              required
+              onChange={handleTypeChange}
+            >
               <MenuItem value="none" disabled>
                 Seleccionar tipo
               </MenuItem>
               <MenuItem value="monthly">Mensual</MenuItem>
               <MenuItem value="annual">Anual</MenuItem>
-              {/* <MenuItem value="one-time">Pago único</MenuItem> */}
+              <MenuItem value="one-time">Pago único</MenuItem>
             </TextField>
             {type !== "none" && type !== "one-time" && (
               <>
@@ -154,16 +249,16 @@ const ExpenseFormDialog: React.FC<ExpenseFormDialogProps> = ({ open, onClose, te
                   <TextField
                     label="Día típico de vencimiento"
                     type="number"
-                    name="dueDay"
-                    defaultValue={template?.dueDay}
+                    name={ExpenseTemplateForm.formKeys.dueDay}
+                    defaultValue={template?.due_day}
                     fullWidth
                     required
                   />
                 ) : (
                   <TextField
                     label="Mes típico de vencimiento"
-                    name="dueMonth"
-                    defaultValue={template?.dueMonth || "none"}
+                    name={ExpenseTemplateForm.formKeys.dueMonth}
+                    defaultValue={template?.due_month || "none"}
                     select
                     fullWidth
                     required
@@ -180,10 +275,17 @@ const ExpenseFormDialog: React.FC<ExpenseFormDialogProps> = ({ open, onClose, te
                 )}
               </>
             )}
-            <TextField label="Categoría" name="categoryId" value={category} select fullWidth onChange={handleCategoryChange}>
+            <TextField
+              label="Categoría"
+              name={ExpenseTemplateForm.formKeys.categoryId}
+              value={category}
+              select
+              fullWidth
+              onChange={handleCategoryChange}
+            >
               <MenuItem value="none">Sin categoría</MenuItem>
               {categories.map((category) => (
-                <MenuItem key={category.id} value={category.id} color={category.color}>
+                <MenuItem key={category.id} value={category.id}>
                   {category.name}
                 </MenuItem>
               ))}
@@ -192,7 +294,7 @@ const ExpenseFormDialog: React.FC<ExpenseFormDialogProps> = ({ open, onClose, te
             </TextField>
             {category === "add-category" && (
               <>
-                <TextField label="Nombre de la categoría" name="categoryName" fullWidth required />
+                <TextField label="Nombre de la categoría" name={ExpenseCategoryForm.formKeys.name} fullWidth required />
               </>
             )}
           </Stack>

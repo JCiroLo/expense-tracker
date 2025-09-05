@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { QueryObserverResult, RefetchOptions, useQuery } from "@tanstack/react-query";
+import { type QueryObserverResult, type RefetchOptions, useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import Loader from "@/components/layout/loader";
 import $ExpenseCategory from "@/services/expense-category";
@@ -47,13 +47,13 @@ const ExpenseTrackerProvider: React.FC<ExpenseTrackerProviderProps> = ({ childre
         };
       }
 
-      const templates = await $ExpenseTemplate.getAll({ userId: user.uid });
+      const templates = await $ExpenseTemplate.getAllIndexed({ userId: user.uid });
 
-      if (!templates.ok) {
+      if (templates.error) {
         throw templates.error;
       }
 
-      const templatesIds = templates.data.map((template) => template.id);
+      const templatesIds = Object.keys(templates.data);
 
       const records = await $ExpenseRecord.getByTemplate({
         userId: user.uid,
@@ -62,7 +62,7 @@ const ExpenseTrackerProvider: React.FC<ExpenseTrackerProviderProps> = ({ childre
         year: DateTools.year,
       });
 
-      if (!records.ok) {
+      if (records.error) {
         throw records.error;
       }
 
@@ -71,7 +71,7 @@ const ExpenseTrackerProvider: React.FC<ExpenseTrackerProviderProps> = ({ childre
       return {
         templates: templates.data,
         records: records.data,
-        categories: categories.ok ? categories.data : [],
+        categories: categories.error ? [] : categories.data,
       };
     },
   });
@@ -87,15 +87,13 @@ const ExpenseTrackerProvider: React.FC<ExpenseTrackerProviderProps> = ({ childre
       };
     }
 
-    const indexed = ArrayTools.indexBy(data.records, (record) => record.templateId!);
+    const indexed = ArrayTools.indexBy(data.records, (record) => record.template_id);
 
-    const now = new Date();
-    const currentYear = now.getFullYear();
-    const currentMonth = now.getMonth();
+    const oneTimeRecords = data.records.filter((record) => {
+      const template = (data.templates as Record<string, ExpenseTemplate>)[record.template_id];
 
-    const oneTimeRecords = data.records.filter(
-      (record) => record.type === "one-time" && record.paidAtYear === currentYear && record.paidAtMonth === currentMonth
-    );
+      return template.type === "one-time";
+    });
 
     return { indexed, all: data.records, oneTime: oneTimeRecords };
   }, [data]);
@@ -111,14 +109,16 @@ const ExpenseTrackerProvider: React.FC<ExpenseTrackerProviderProps> = ({ childre
       };
     }
 
-    const sorted = Object.groupBy(data.templates, (record) => record.type);
+    const indexed = data.templates;
+    const all = Object.values(indexed);
+    const { annual, monthly } = Object.groupBy(all, (record) => record.type);
 
     const expired: ExpenseTemplate[] = [];
     const closeToExpire: ExpenseTemplate[] = [];
     const today = dayjs().startOf("day");
 
-    (sorted.monthly || []).forEach((template) => {
-      const dueDate = dayjs().date(template.dueDay!).startOf("day");
+    (monthly || []).forEach((template) => {
+      const dueDate = dayjs().date(template.due_day!).startOf("day");
       const diff = dueDate.diff(today, "day");
       const paid = records.indexed[template.id];
 
@@ -134,11 +134,11 @@ const ExpenseTrackerProvider: React.FC<ExpenseTrackerProviderProps> = ({ childre
     });
 
     return {
+      all,
       expired,
       closeToExpire,
-      monthly: sorted.monthly || [],
-      annual: sorted.annual || [],
-      all: data.templates,
+      monthly: monthly || [],
+      annual: annual || [],
     };
   }, [data, records.indexed]);
 

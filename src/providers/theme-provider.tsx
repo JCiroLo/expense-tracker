@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { ThemeProvider as MuiThemeProvider, PaletteMode } from "@mui/material/styles";
+import { ThemeProvider as MuiThemeProvider, type PaletteMode } from "@mui/material/styles";
 import { CssBaseline } from "@mui/material";
 import createTheme from "@/themes/create-theme";
 import useSettingsStore from "@/stores/use-settings-store";

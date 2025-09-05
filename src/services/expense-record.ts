@@ -1,7 +1,6 @@
-import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, query, updateDoc, where } from "firebase/firestore";
-import { assignTypes, db } from "@/lib/firebase";
+import supabase from "@/lib/supabase";
 import Response from "@/lib/response";
-import { ExpenseRecord } from "@/types/expense";
+import type { ExpenseRecord } from "@/types/expense";
 
 type GetByTemplateParams = {
   templateId: string | string[];
@@ -10,66 +9,68 @@ type GetByTemplateParams = {
   year: number;
 };
 
-const firebase = {
-  collection: collection(db, "expense-records").withConverter(assignTypes<ExpenseRecord>()),
-  doc: (id: string) => doc(db, "expense-records", id),
-};
-
 const $ExpenseRecord = {
   async get(id: string) {
-    const snapshot = await getDoc(firebase.doc(id));
+    const { data, error } = await supabase.from("expense_records").select("*").eq("id", id).single();
 
-    return Response.success(snapshot.data());
+    if (error) {
+      return Response.error(error);
+    }
+
+    return Response.success(data as ExpenseRecord);
   },
   async getByTemplate({ templateId, userId, month, year }: GetByTemplateParams) {
-    const q = query(
-      firebase.collection,
-      where("userId", "==", userId),
-      where("templateId", Array.isArray(templateId) ? "in" : "==", templateId),
-      where("paidAtMonth", "==", month),
-      where("paidAtYear", "==", year)
-    );
+    let query = supabase.from("expense_records").select("*").eq("user_id", userId).eq("paid_at_month", month).eq("paid_at_year", year);
 
-    const snapshot = await getDocs(q);
+    if (Array.isArray(templateId)) {
+      query = query.in("template_id", templateId);
+    } else {
+      query = query.eq("template_id", templateId);
+    }
 
-    return Response.success(snapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id })));
+    const { data, error } = await query;
+
+    if (error) {
+      return Response.error(error);
+    }
+
+    return Response.success(data as ExpenseRecord[]);
   },
   async getAll({ userId }: { userId: string }) {
-    const q = query(firebase.collection, where("userId", "==", userId));
+    const { data, error } = await supabase.from("expense_records").select("*").eq("user_id", userId);
 
-    const snapshot = await getDocs(q);
+    if (error) {
+      return Response.error(error);
+    }
 
-    return Response.success(snapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id })));
+    return Response.success(data as ExpenseRecord[]);
   },
   async create(record: Omit<ExpenseRecord, "id">) {
-    const docRef = await addDoc(firebase.collection, record);
+    const { data, error } = await supabase.from("expense_records").insert(record).select().single();
 
-    return Response.success({ id: docRef.id, ...record });
+    if (error) {
+      return Response.error(error);
+    }
+
+    return Response.success(data as ExpenseRecord);
   },
   async update(id: string, record: Partial<Omit<ExpenseRecord, "id">>) {
-    await updateDoc(firebase.doc(id), record);
+    const { data, error } = await supabase.from("expense_records").update(record).eq("id", id).select().single();
 
-    return Response.success({ id, ...record });
+    if (error) {
+      return Response.error(error);
+    }
+
+    return Response.success(data as ExpenseRecord);
   },
   async delete(id: string) {
-    await deleteDoc(firebase.doc(id));
+    const { error } = await supabase.from("expense_records").delete().eq("id", id);
+
+    if (error) {
+      return Response.error(error);
+    }
 
     return Response.success({ id });
-  },
-  async createOneTimePayment({ userId, title, amount }: { userId: string; title: string; amount: number }) {
-    const now = new Date();
-    const record: Omit<ExpenseRecord, "id"> = {
-      templateId: null,
-      type: "one-time",
-      userId,
-      paidAtYear: now.getFullYear(),
-      paidAtMonth: now.getMonth(),
-      paidAt: now,
-      title,
-      amount,
-    };
-
-    return this.create(record);
   },
 };
 

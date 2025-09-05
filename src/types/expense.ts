@@ -4,32 +4,26 @@ export type ExpenseCategory = {
   color: string;
   id: string;
   name: string;
-  userId: string;
+  user_id: string;
 };
 
 export type ExpenseTemplate = {
   amount: number;
-  categoryId: string;
-  dueDay: number | null;
-  dueMonth: number | null;
+  category_id: string | null;
+  due_day: number | null;
+  due_month: number | null;
   id: string;
   title: string;
   type: ExpenseType;
-  userId: string;
+  user_id: string;
 };
 
 export type ExpenseRecord = {
-  // Common fields
-  categoryId: string;
+  category_id: string | null;
   id: string;
-  paidAt: Date;
-  paidAtMonth: number;
-  paidAtYear: number;
-  templateId: string | null;
-  type: ExpenseType;
-  userId: string;
-} & {
-  // One-time expense fields
-  amount: number | null;
-  title: string | null;
+  paid_at: Date;
+  paid_at_month: number;
+  paid_at_year: number;
+  template_id: string;
+  user_id: string;
 };

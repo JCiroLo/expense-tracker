@@ -19,12 +19,16 @@ import {
   Typography,
   Avatar,
   Link,
+  IconButton,
 } from "@mui/material";
+import AccentColorSelector from "@/components/layout/accent-color-selector";
 import ChevronLeftIcon from "@/components/icons/chevron-left-icon";
 import EyeIcon from "@/components/icons/eye-icon";
 import InfoIcon from "@/components/icons/info-icon";
+import ShapesIcon from "@/components/icons/shapes-icon";
+import TrashIcon from "@/components/icons/trash-icon";
 import UserIcon from "@/components/icons/user-icon";
-import AccentColorSelector from "@/components/layout/accent-color-selector";
+import useExpenseTracker from "@/hooks/use-expense-tracker";
 import useSettingsStore from "@/stores/use-settings-store";
 import type { AccentColor } from "@/types/global";
 
@@ -33,7 +37,7 @@ type SettingsDialogProps = {
   onClose: () => void;
 };
 
-type SectionValue = "appearance" | "account" | "about";
+type SectionValue = "appearance" | "account" | "about" | "categories";
 
 type Section = {
   label: string;
@@ -47,6 +51,12 @@ const SECTIONS: Record<SectionValue, Section> = {
     label: "Apariencia",
     icon: <EyeIcon />,
     value: "appearance",
+    disabled: false,
+  },
+  categories: {
+    label: "Categorías",
+    icon: <ShapesIcon />,
+    value: "categories",
     disabled: false,
   },
   account: {
@@ -96,9 +106,41 @@ const SettingsAppearance = () => {
   );
 };
 
+const SettingsCategories = () => {
+  const { categories } = useExpenseTracker();
+
+  if (categories.length === 0) {
+    return (
+      <ListItem>
+        <ListItemText primary="No tienes categorías disponibles" secondary="¡Empieza creando una para organizar tus gastos!" />
+      </ListItem>
+    );
+  }
+
+  return (
+    <>
+      {categories.map((category) => (
+        <ListItem
+          key={category.id}
+          sx={{ borderRadius: 1, "&:hover": { backgroundColor: "action.hover" } }}
+          secondaryAction={
+            <Stack direction="row" spacing={1} alignItems="center">
+              <IconButton color="inherit" disabled>
+                <TrashIcon />
+              </IconButton>
+            </Stack>
+          }
+        >
+          <ListItemText primary={category.name} />
+        </ListItem>
+      ))}
+    </>
+  );
+};
+
 const SettingsAbout = () => {
   return (
-    <Stack spacing={4} padding={2}>
+    <Stack component="li" spacing={4} padding={2}>
       <Stack>
         <img src="/logo.png" alt="Antracker" width={32} height={32} />
         <Typography variant="body2">
@@ -112,7 +154,7 @@ const SettingsAbout = () => {
       <Stack direction="row" spacing={1} alignItems="center">
         <Avatar src="/juanciro.jpg" alt="Juan Ciro" />
         <Stack spacing={0.5}>
-          <Typography component="span" variant="body1" fontWeight="bold" lineHeight={1}>
+          <Typography variant="body1" fontWeight="bold" lineHeight={1}>
             Juan Ciro
           </Typography>
           <Link lineHeight={1} href="mailto:juanciro35@gmail.com">
@@ -165,13 +207,14 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({ open, onClose }) => {
             ))}
           </List>
           {section && (
-            <List sx={{ flexGrow: 1 }} disablePadding>
+            <List sx={{ flexGrow: 1, paddingRight: 2 }} disablePadding>
               <ListItem sx={{ display: { xs: "flex", sm: "none" } }}>
                 <Button variant="text" startIcon={<ChevronLeftIcon />} sx={{ padding: 0 }} onClick={() => setSection(null)}>
                   Ajustes
                 </Button>
               </ListItem>
               {section === "appearance" && <SettingsAppearance />}
+              {section === "categories" && <SettingsCategories />}
               {section === "about" && <SettingsAbout />}
             </List>
           )}

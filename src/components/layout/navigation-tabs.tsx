@@ -1,7 +1,7 @@
 import React from "react";
-import useSettingsStore from "@/stores/use-settings-store";
-import { Tab as TabType } from "@/types/global";
 import { Paper, Stack, Tab, Tabs } from "@mui/material";
+import useSettingsStore from "@/stores/use-settings-store";
+import type { Tab as TabType } from "@/types/global";
 
 const NavigationTabs = () => {
   const { selectedTab, setSelectedTab } = useSettingsStore();
