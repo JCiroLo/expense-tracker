@@ -11,7 +11,14 @@ import DateTools from "@/tools/date-tools";
 import Env from "@/lib/env";
 import type { ExpenseCategory, ExpenseRecord, ExpenseTemplate } from "@/types/expense";
 
+type ExenseTrackerFilters = {
+  month: number;
+  year: number;
+};
+
 type ExpenseTrackerContextType = {
+  categories: ExpenseCategory[];
+  filters: ExenseTrackerFilters;
   templates: {
     expired: ExpenseTemplate[];
     closeToExpire: ExpenseTemplate[];
@@ -24,12 +31,32 @@ type ExpenseTrackerContextType = {
     all: ExpenseRecord[];
     oneTime: ExpenseRecord[]; // Pagos únicos del mes actual
   };
-  categories: ExpenseCategory[];
-  refresh: (options?: RefetchOptions) => Promise<QueryObserverResult>;
+  refresh: {
+    categories: (options?: RefetchOptions) => Promise<QueryObserverResult>;
+    templates: (options?: RefetchOptions) => Promise<QueryObserverResult>;
+    records: (options?: RefetchOptions) => Promise<QueryObserverResult>;
+    all: (options?: RefetchOptions) => Promise<QueryObserverResult>;
+  };
+  updateFilters: (newFilters: Partial<ExenseTrackerFilters>) => void;
 };
 
 type ExpenseTrackerProviderProps = {
   children: React.ReactNode;
+};
+
+const defaultRecords = {
+  all: [] as ExpenseRecord[],
+  indexed: {} as Record<string, ExpenseRecord>,
+  oneTime: [] as ExpenseRecord[],
+};
+
+const defaultTemplates = {
+  all: [] as ExpenseTemplate[],
+  annual: [] as ExpenseTemplate[],
+  closeToExpire: [] as ExpenseTemplate[],
+  expired: [] as ExpenseTemplate[],
+  indexed: {} as Record<string, ExpenseTemplate>,
+  monthly: [] as ExpenseTemplate[],
 };
 
 const ExpenseTrackerContext = React.createContext<ExpenseTrackerContextType>(null!);
@@ -37,90 +64,103 @@ const ExpenseTrackerContext = React.createContext<ExpenseTrackerContextType>(nul
 const ExpenseTrackerProvider: React.FC<ExpenseTrackerProviderProps> = ({ children }) => {
   const user = useSessionStore((state) => state.user);
 
-  const { data, refetch, isLoading } = useQuery({
-    queryKey: ["get-templates-and-records"],
+  const [filters, setFilters] = React.useState<ExenseTrackerFilters>({
+    month: DateTools.month,
+    year: DateTools.year,
+  });
+
+  const categories = useQuery({
+    queryKey: ["fetch-categories", user?.uid],
     queryFn: async () => {
       if (!user) {
-        return {
-          templates: [],
-          records: [],
-        };
+        return [];
       }
 
-      const templates = await $ExpenseTemplate.getAllIndexed({ userId: user.uid });
+      const { error, data } = await $ExpenseCategory.getAll({ userId: user.uid });
 
-      if (templates.error) {
-        throw templates.error;
+      if (error) {
+        throw error;
       }
 
-      const templatesIds = Object.keys(templates.data);
+      console.log("fetched categories");
 
-      const records = await $ExpenseRecord.getByTemplate({
-        userId: user.uid,
-        templateId: templatesIds,
-        month: DateTools.month,
-        year: DateTools.year,
-      });
+      return data;
+    },
+  });
 
-      if (records.error) {
-        throw records.error;
+  const templates = useQuery({
+    queryKey: ["fetch-templates", user?.uid],
+    queryFn: async () => {
+      if (!user) {
+        return defaultTemplates;
       }
 
-      const categories = await $ExpenseCategory.getAll({ userId: user.uid });
+      const { error, data } = await $ExpenseTemplate.getAllIndexed({ userId: user.uid });
+
+      if (error) {
+        throw error;
+      }
+
+      const all = Object.values(data);
+      const { annual, monthly } = Object.groupBy(all, (record) => record.type);
+
+      console.log("fetched templates");
 
       return {
-        templates: templates.data,
-        records: records.data,
-        categories: categories.error ? [] : categories.data,
+        all,
+        annual: annual || [],
+        closeToExpire: [] as ExpenseTemplate[],
+        expired: [] as ExpenseTemplate[],
+        indexed: data,
+        monthly: monthly || [],
       };
     },
   });
 
-  const records = useMemo(() => {
-    console.log("calculating all records");
+  const records = useQuery({
+    enabled: Boolean(templates.data),
+    queryKey: ["fetch-records", user?.uid, filters],
+    queryFn: async () => {
+      if (!user || !templates.data) {
+        return defaultRecords;
+      }
 
-    if (!data?.records) {
-      return {
-        indexed: {} as Record<string, ExpenseRecord>,
-        all: [] as ExpenseRecord[],
-        oneTime: [] as ExpenseRecord[],
-      };
-    }
+      const templatesIds = Object.keys(templates.data.indexed);
 
-    const indexed = ArrayTools.indexBy(data.records, (record) => record.template_id);
+      const { error, data } = await $ExpenseRecord.getByTemplate({
+        month: filters.month,
+        templateId: templatesIds,
+        userId: user.uid,
+        year: filters.year,
+      });
 
-    const oneTimeRecords = data.records.filter((record) => {
-      const template = (data.templates as Record<string, ExpenseTemplate>)[record.template_id];
+      if (error) {
+        throw error;
+      }
 
-      return template.type === "one-time";
-    });
+      const indexed = ArrayTools.indexBy(data, (record) => record.template_id);
 
-    return { indexed, all: data.records, oneTime: oneTimeRecords };
-  }, [data]);
+      const oneTimeRecords = data.filter((record) => {
+        const template = (templates.data.indexed as Record<string, ExpenseTemplate>)[record.template_id];
 
-  const templates = useMemo(() => {
-    if (!data?.templates) {
-      return {
-        expired: [],
-        closeToExpire: [],
-        monthly: [],
-        annual: [],
-        all: [],
-      };
-    }
+        return template.type === "one-time";
+      });
 
-    const indexed = data.templates;
-    const all = Object.values(indexed);
-    const { annual, monthly } = Object.groupBy(all, (record) => record.type);
+      console.log("fetched records", data);
 
+      return { indexed, all: data, oneTime: oneTimeRecords };
+    },
+  });
+
+  const expiration = useMemo(() => {
+    const today = dayjs().startOf("day");
     const expired: ExpenseTemplate[] = [];
     const closeToExpire: ExpenseTemplate[] = [];
-    const today = dayjs().startOf("day");
 
-    (monthly || []).forEach((template) => {
+    (templates.data?.monthly || []).forEach((template) => {
       const dueDate = dayjs().date(template.due_day!).startOf("day");
       const diff = dueDate.diff(today, "day");
-      const paid = records.indexed[template.id];
+      const paid = records.data?.indexed[template.id] || false;
 
       if (diff <= Env.MAX_DAYS_EXPIRATION_DANGER && !paid) {
         expired.push(template);
@@ -133,34 +173,39 @@ const ExpenseTrackerProvider: React.FC<ExpenseTrackerProviderProps> = ({ childre
       }
     });
 
-    return {
-      all,
-      expired,
-      closeToExpire,
-      monthly: monthly || [],
-      annual: annual || [],
-    };
-  }, [data, records.indexed]);
+    return { closeToExpire, expired };
+  }, [templates.data, records]);
 
-  const categories = useMemo(() => {
-    if (!data?.categories) {
-      return [];
-    }
+  function updateFilters(newFilters: Partial<ExenseTrackerFilters>) {
+    setFilters((prev) => ({ ...prev, ...newFilters }));
+  }
 
-    return data.categories;
-  }, [data]);
+  async function refetch(options?: RefetchOptions) {
+    return Promise.all([categories.refetch(options), templates.refetch(options), records.refetch(options)]).then(([a]) => a);
+  }
 
   return (
     <ExpenseTrackerContext.Provider
       value={{
-        templates,
-        records,
-        categories,
-        refresh: refetch,
+        filters,
+        updateFilters,
+        categories: categories.data || [],
+        templates: {
+          ...(templates.data || defaultTemplates),
+          closeToExpire: expiration.closeToExpire,
+          expired: expiration.expired,
+        },
+        records: records.data || defaultRecords,
+        refresh: {
+          categories: categories.refetch,
+          templates: templates.refetch,
+          records: records.refetch,
+          all: refetch,
+        },
       }}
     >
       {children}
-      <Loader show={isLoading} />
+      <Loader show={categories.isLoading || templates.isLoading || records.isLoading} />
     </ExpenseTrackerContext.Provider>
   );
 };

@@ -180,6 +180,13 @@ const createTheme = ({ accentColor }: { accentColor: AccentColor }) =>
           useFlexGap: true,
         },
       },
+      MuiTab: {
+        styleOverrides: {
+          root: {
+            minWidth: "unset",
+          },
+        },
+      },
       MuiTooltip: {
         defaultProps: {
           arrow: true,

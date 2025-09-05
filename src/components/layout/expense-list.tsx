@@ -8,7 +8,7 @@ import $ExpenseRecord from "@/services/expense-record";
 import type { ExpenseRecord, ExpenseTemplate } from "@/types/expense";
 
 const ExpenseList = () => {
-  const { templates, records, refresh } = useExpenseTracker();
+  const { templates, records, filters, refresh } = useExpenseTracker();
   const selectedTab = useSettingsStore((state) => state.selectedTab);
   const dialog = useDialog();
 
@@ -46,21 +46,18 @@ const ExpenseList = () => {
   }
 
   async function handleMarkAsPaid(template: ExpenseTemplate) {
-    const now = new Date();
-
     setIsLoading((prev) => ({ ...prev, template }));
 
     const record = await $ExpenseRecord.create({
       category_id: template.category_id,
-      paid_at_month: now.getMonth(),
-      paid_at_year: now.getFullYear(),
-      paid_at: now,
+      paid_at_month: filters.month,
+      paid_at_year: filters.year,
       template_id: template.id,
       user_id: template.user_id,
     });
 
     if (!record.error) {
-      await refresh();
+      await refresh.records();
     }
 
     setIsLoading((prev) => ({ ...prev, template: null }));
@@ -72,7 +69,7 @@ const ExpenseList = () => {
     const response = await $ExpenseRecord.delete(record.id);
 
     if (!response.error) {
-      await refresh();
+      await refresh.records();
     }
 
     setIsLoading((prev) => ({ ...prev, template: null }));

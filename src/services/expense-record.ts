@@ -19,6 +19,15 @@ const $ExpenseRecord = {
 
     return Response.success(data as ExpenseRecord);
   },
+  async getAll({ userId }: { userId: string }) {
+    const { data, error } = await supabase.from("expense_records").select("*").eq("user_id", userId);
+
+    if (error) {
+      return Response.error(error);
+    }
+
+    return Response.success(data as ExpenseRecord[]);
+  },
   async getByTemplate({ templateId, userId, month, year }: GetByTemplateParams) {
     let query = supabase.from("expense_records").select("*").eq("user_id", userId).eq("paid_at_month", month).eq("paid_at_year", year);
 
@@ -36,16 +45,7 @@ const $ExpenseRecord = {
 
     return Response.success(data as ExpenseRecord[]);
   },
-  async getAll({ userId }: { userId: string }) {
-    const { data, error } = await supabase.from("expense_records").select("*").eq("user_id", userId);
-
-    if (error) {
-      return Response.error(error);
-    }
-
-    return Response.success(data as ExpenseRecord[]);
-  },
-  async create(record: Omit<ExpenseRecord, "id">) {
+  async create(record: Omit<ExpenseRecord, "created_at" | "id">) {
     const { data, error } = await supabase.from("expense_records").insert(record).select().single();
 
     if (error) {

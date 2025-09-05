@@ -27,7 +27,8 @@ const RemoveExpenseDialog: React.FC<RemoveExpenseDialogProps> = ({ open, templat
 
     await $ExpenseTemplate.delete(template.id);
 
-    await refresh();
+    await refresh.templates();
+    await refresh.records();
 
     setIsLoading(false);
 

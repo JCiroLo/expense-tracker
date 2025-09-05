@@ -59,9 +59,9 @@ const Analytics = () => {
   }, [templates, selectedTab, records.indexed, records.oneTime]);
 
   return (
-    <Stack height="100%" gap={2} sx={{ overflowY: "auto" }}>
-      <Stack direction="row" gap={2}>
-        <Stack flexShrink={0} justifyContent="center" width="33%" padding={1} borderRadius={1}>
+    <Stack height="100%" gap={{ xs: 1, sm: 2 }} sx={{ overflowY: "auto" }}>
+      <Stack direction={{ xs: "column", sm: "row" }} alignItems="center" gap={2} marginBottom={{ xs: 2, sm: 0 }}>
+        <Stack order={{ xs: 1, sm: 0 }} flexShrink={0} justifyContent="center" alignItems="center" width="33%" padding={1} borderRadius={1}>
           <Typography component="h5" variant="body2" color="textSecondary" textAlign="center">
             Avance
           </Typography>
@@ -71,17 +71,19 @@ const Analytics = () => {
         </Stack>
         <Gauge
           value={totals.percentages[selectedTab]}
+          height={150}
           startAngle={-140}
           endAngle={140}
           cornerRadius="50%"
           text={({ value }) => `${value?.toFixed() || 0}%`}
           sx={{
+            order: { xs: 0, sm: 1 },
             "& .MuiGauge-valueText": {
               fontSize: "2rem",
             },
           }}
         />
-        <Stack flexShrink={0} justifyContent="center" width="33%" padding={1} borderRadius={1}>
+        <Stack order={2} flexShrink={0} justifyContent="center" alignItems="center" width="33%" padding={1} borderRadius={1}>
           <Typography component="h5" variant="body2" color="textSecondary" textAlign="center">
             Meta
           </Typography>

@@ -4,6 +4,7 @@ import ExpenseFormDialog from "@/components/dialogs/expense-form-dialog";
 import RemoveExpenseDialog from "@/components/dialogs/remove-expense-dialog";
 import SettingsDialog from "@/components/dialogs/settings-dialog";
 import ActionsBar from "@/components/layout/actions-bar";
+import DateSelector from "@/components/layout/date-selector";
 import NavigationTabs from "@/components/layout/navigation-tabs";
 import PageContainer from "@/components/layout/page-container";
 import Sidebar from "@/components/layout/sidebar";
@@ -17,6 +18,7 @@ const AppWrapper = () => {
   return (
     <PageContainer>
       <NavigationTabs />
+      <DateSelector />
       <Outlet />
       <Slide in={showActionsBar} direction="up" mountOnEnter>
         <ActionsBar />

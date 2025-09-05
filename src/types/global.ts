@@ -1,4 +1,4 @@
-export type Tab = "monthly" | "annual" | "all";
+export type Tab = "monthly" | "annual";
 
 export type Dialog = "manage-expense-template" | "remove-expense-template" | "global-settings";
 

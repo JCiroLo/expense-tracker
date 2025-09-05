@@ -31,7 +31,7 @@ type ExpenseFormDialogProps = {
 
 const ExpenseFormDialog: React.FC<ExpenseFormDialogProps> = ({ open, onClose, template }) => {
   const user = useSessionStore((state) => state.user);
-  const { categories, refresh } = useExpenseTracker();
+  const { categories, filters, refresh } = useExpenseTracker();
 
   const [type, setType] = React.useState<ExpenseType | "none">("none");
   const [category, setCategory] = React.useState<string | "add-category" | "none">(template?.category_id || "none");
@@ -78,9 +78,8 @@ const ExpenseFormDialog: React.FC<ExpenseFormDialogProps> = ({ open, onClose, te
 
     const record = await $ExpenseRecord.create({
       category_id: formData.categoryId,
-      paid_at: DateTools.now,
-      paid_at_month: DateTools.month,
-      paid_at_year: DateTools.year,
+      paid_at_month: filters.month,
+      paid_at_year: filters.year,
       template_id: template.data.id,
       user_id: user!.uid,
     });
@@ -188,7 +187,7 @@ const ExpenseFormDialog: React.FC<ExpenseFormDialogProps> = ({ open, onClose, te
       await handleTemplateCreation({ ...formTemplate, categoryId });
     }
 
-    await refresh();
+    await refresh.records();
 
     setIsLoading(false);
 

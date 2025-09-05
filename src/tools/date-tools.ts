@@ -22,6 +22,14 @@ const DateTools = {
   get year() {
     return new Date().getFullYear();
   },
+  get years() {
+    const currentYear = this.year;
+    // Generate a list of years where the range is from currentYear - 5 to currentYear + 5
+    return Array.from({ length: 11 }, (_, i) => {
+      const year = currentYear - 5 + i;
+      return { name: year.toString(), value: year };
+    });
+  },
   format(date: Date | string, format: string) {
     return dayjs(date).format(format);
   },

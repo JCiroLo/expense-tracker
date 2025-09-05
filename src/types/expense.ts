@@ -20,8 +20,8 @@ export type ExpenseTemplate = {
 
 export type ExpenseRecord = {
   category_id: string | null;
+  created_at: string;
   id: string;
-  paid_at: Date;
   paid_at_month: number;
   paid_at_year: number;
   template_id: string;

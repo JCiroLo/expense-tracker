@@ -122,7 +122,7 @@ const SettingsCategories = () => {
       {categories.map((category) => (
         <ListItem
           key={category.id}
-          sx={{ borderRadius: 1, "&:hover": { backgroundColor: "action.hover" } }}
+          sx={{ "&:hover": { backgroundColor: "action.hover" } }}
           secondaryAction={
             <Stack direction="row" spacing={1} alignItems="center">
               <IconButton color="inherit" disabled>
@@ -184,7 +184,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({ open, onClose }) => {
       <DialogTitle display={{ xs: "none", sm: "block" }}>Ajustes</DialogTitle>
       <DialogTitle display={{ xs: "block", sm: "none" }}>{title}</DialogTitle>
       <DialogContent sx={{ paddingX: 0, paddingY: { xs: 1, sm: 2 } }}>
-        <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+        <Stack direction={{ xs: "column", sm: "row" }}>
           <Tabs
             value={section}
             orientation="vertical"
@@ -207,7 +207,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({ open, onClose }) => {
             ))}
           </List>
           {section && (
-            <List sx={{ flexGrow: 1, paddingRight: 2 }} disablePadding>
+            <List sx={{ flexGrow: 1 }} disablePadding>
               <ListItem sx={{ display: { xs: "flex", sm: "none" } }}>
                 <Button variant="text" startIcon={<ChevronLeftIcon />} sx={{ padding: 0 }} onClick={() => setSection(null)}>
                   Ajustes

@@ -22,7 +22,7 @@ const ExpenseListItem: React.FC<ExpenseListItemProps> = ({ template, loading, on
 
   const helperText = useMemo(() => {
     if (record) {
-      return `Pagado el ${DateTools.format(record.paid_at, "d [de] MMMM [del] YYYY")}`;
+      return `Pagado el ${DateTools.format(record.created_at, "d [de] MMMM [del] YYYY")}`;
     }
 
     if (template.type === "monthly") {

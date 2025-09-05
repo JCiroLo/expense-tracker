@@ -15,7 +15,6 @@ const NavigationTabs = () => {
       <Tabs value={selectedTab} centered onChange={handleTabChange}>
         <Tab label="Mensuales" value="monthly" />
         <Tab label="Anuales" value="annual" />
-        <Tab label="Todos" value="all" />
       </Tabs>
     </Stack>
   );
