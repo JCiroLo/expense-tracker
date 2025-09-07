@@ -66,6 +66,7 @@ const ExpenseFormDialog: React.FC<ExpenseFormDialogProps> = ({ open, onClose, te
       category_id: formData.categoryId,
       due_day: DateTools.day,
       due_month: DateTools.month,
+      due_year: DateTools.year,
       title: formData.title,
       type: formData.type,
       user_id: user!.uid,
@@ -115,6 +116,7 @@ const ExpenseFormDialog: React.FC<ExpenseFormDialogProps> = ({ open, onClose, te
         category_id: formData.categoryId,
         due_day: formData.dueDay,
         due_month: formData.dueMonth,
+        due_year: null,
         title: formData.title,
         user_id: user!.uid,
       });

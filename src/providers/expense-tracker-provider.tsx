@@ -19,12 +19,14 @@ type ExenseTrackerFilters = {
 type ExpenseTrackerContextType = {
   categories: ExpenseCategory[];
   filters: ExenseTrackerFilters;
+  isLoading: boolean;
   templates: {
-    expired: ExpenseTemplate[];
-    closeToExpire: ExpenseTemplate[];
-    monthly: ExpenseTemplate[];
-    annual: ExpenseTemplate[];
     all: ExpenseTemplate[];
+    annual: ExpenseTemplate[];
+    closeToExpire: ExpenseTemplate[];
+    expired: ExpenseTemplate[];
+    monthly: ExpenseTemplate[];
+    oneTime: ExpenseTemplate[];
   };
   records: {
     indexed: Record<string, ExpenseRecord>;
@@ -57,6 +59,7 @@ const defaultTemplates = {
   expired: [] as ExpenseTemplate[],
   indexed: {} as Record<string, ExpenseTemplate>,
   monthly: [] as ExpenseTemplate[],
+  oneTime: [] as ExpenseTemplate[],
 };
 
 const ExpenseTrackerContext = React.createContext<ExpenseTrackerContextType>(null!);
@@ -89,22 +92,22 @@ const ExpenseTrackerProvider: React.FC<ExpenseTrackerProviderProps> = ({ childre
   });
 
   const templates = useQuery({
-    queryKey: ["fetch-templates", user?.uid],
+    queryKey: ["fetch-templates", user?.uid, filters],
     queryFn: async () => {
       if (!user) {
         return defaultTemplates;
       }
 
-      const { error, data } = await $ExpenseTemplate.getAllIndexed({ userId: user.uid });
+      const { error, data } = await $ExpenseTemplate.getAllIndexed({ month: filters.month, userId: user.uid, year: filters.year });
 
       if (error) {
         throw error;
       }
 
       const all = Object.values(data);
-      const { annual, monthly } = Object.groupBy(all, (record) => record.type);
+      const { annual, monthly, "one-time": oneTime } = Object.groupBy(all, (record) => record.type);
 
-      console.log("fetched templates");
+      console.log("fetched templates", data);
 
       return {
         all,
@@ -113,6 +116,7 @@ const ExpenseTrackerProvider: React.FC<ExpenseTrackerProviderProps> = ({ childre
         expired: [] as ExpenseTemplate[],
         indexed: data,
         monthly: monthly || [],
+        oneTime: oneTime || [],
       };
     },
   });
@@ -184,10 +188,13 @@ const ExpenseTrackerProvider: React.FC<ExpenseTrackerProviderProps> = ({ childre
     return Promise.all([categories.refetch(options), templates.refetch(options), records.refetch(options)]).then(([a]) => a);
   }
 
+  const isLoading = categories.isFetching || templates.isFetching || records.isFetching;
+
   return (
     <ExpenseTrackerContext.Provider
       value={{
         filters,
+        isLoading,
         updateFilters,
         categories: categories.data || [],
         templates: {
@@ -205,7 +212,7 @@ const ExpenseTrackerProvider: React.FC<ExpenseTrackerProviderProps> = ({ childre
       }}
     >
       {children}
-      <Loader show={categories.isLoading || templates.isLoading || records.isLoading} />
+      <Loader show={isLoading} />
     </ExpenseTrackerContext.Provider>
   );
 };

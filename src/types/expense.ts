@@ -12,6 +12,7 @@ export type ExpenseTemplate = {
   category_id: string | null;
   due_day: number | null;
   due_month: number | null;
+  due_year: number | null;
   id: string;
   title: string;
   type: ExpenseType;

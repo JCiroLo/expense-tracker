@@ -21,19 +21,19 @@ const ExpenseListItem: React.FC<ExpenseListItemProps> = ({ template, loading, on
   const record = useMemo(() => records.indexed[template.id], [template.id, records.indexed]);
 
   const helperText = useMemo(() => {
-    if (record) {
-      return `Pagado el ${DateTools.format(record.created_at, "d [de] MMMM [del] YYYY")}`;
+    if (template.type === "one-time") {
+      return `Pago único hecho el ${DateTools.format(record.created_at, "d [de] MMMM [del] YYYY")}`;
     }
 
-    if (template.type === "monthly") {
-      return `Día de vencimiento: ${template.due_day} de ${DateTools.monthName()}`;
+    if (record) {
+      return `Pagado el ${DateTools.format(record.created_at, "d [de] MMMM [del] YYYY")}`;
     }
 
     if (template.type === "annual") {
       return `Mes de vencimiento: ${DateTools.monthName(template.due_month!)}`;
     }
 
-    return "Pago único";
+    return `Día de vencimiento: ${template.due_day} de ${DateTools.monthName()}`;
   }, [template, record]);
 
   const paid = Boolean(record);

@@ -8,7 +8,7 @@ import $ExpenseRecord from "@/services/expense-record";
 import type { ExpenseRecord, ExpenseTemplate } from "@/types/expense";
 
 const ExpenseList = () => {
-  const { templates, records, filters, refresh } = useExpenseTracker();
+  const { templates, records, filters, refresh, isLoading: fetching } = useExpenseTracker();
   const selectedTab = useSettingsStore((state) => state.selectedTab);
   const dialog = useDialog();
 
@@ -22,7 +22,7 @@ const ExpenseList = () => {
     template: null as ExpenseTemplate | null,
   });
 
-  const selectedTemplates = useMemo(() => templates[selectedTab], [selectedTab, templates]);
+  const selectedTemplates = useMemo(() => [...templates[selectedTab], ...templates.oneTime], [selectedTab, templates]);
 
   function handleMenuOpen(event: React.MouseEvent<HTMLElement>, template: ExpenseTemplate) {
     const record = records.indexed[template.id] || null;
@@ -78,7 +78,7 @@ const ExpenseList = () => {
   return (
     <>
       <List sx={{ height: "100%", overflowY: "auto" }} disablePadding>
-        {selectedTemplates.length === 0 ? (
+        {fetching ? null : selectedTemplates.length === 0 ? (
           <Typography variant="body2" color="text.secondary" textAlign="center" sx={{ my: 2 }}>
             No hay gastos registrados.
           </Typography>
@@ -97,6 +97,7 @@ const ExpenseList = () => {
       <Menu open={Boolean(menuAnchor.element)} anchorEl={menuAnchor.element} onClose={handleMenuClose}>
         {menuAnchor.isPaid ? (
           <MenuItem
+            disabled={menuAnchor.template?.type === "one-time"}
             onClick={() => {
               handleMarkAsUnpaid(menuAnchor.template!, menuAnchor.record!);
               handleMenuClose();
@@ -116,6 +117,7 @@ const ExpenseList = () => {
         )}
         <Divider />
         <MenuItem
+          disabled={menuAnchor.template?.type === "one-time"}
           onClick={() => {
             dialog.open("manage-expense-template", menuAnchor.template);
             handleMenuClose();
