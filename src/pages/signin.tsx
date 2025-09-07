@@ -4,6 +4,7 @@ import { Alert, Button, CircularProgress, Stack, TextField, Typography } from "@
 import { isSignInWithEmailLink, sendSignInLinkToEmail, signInWithEmailLink } from "firebase/auth";
 import useSessionStore from "@/stores/use-session-store";
 import useAsyncEffect from "@/hooks/use-async-effect";
+import $User from "@/services/user";
 import { auth } from "@/lib/firebase";
 import Env from "@/lib/env";
 
@@ -65,6 +66,8 @@ const Signin = () => {
           setLoading(true);
 
           const result = await signInWithEmailLink(auth, email, url);
+
+          await $User.create({ id: result.user.uid, email: result.user.email! });
 
           setUser(result.user);
         } catch {
