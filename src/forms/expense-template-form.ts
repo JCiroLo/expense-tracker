@@ -19,6 +19,7 @@ const ExpenseTemplateForm = {
       categoryId: formData.get(this.formKeys.categoryId) as string,
       dueDay: Number(formData.get(this.formKeys.dueDay)) || null,
       dueMonth: Number(formData.get(this.formKeys.dueMonth)) || null,
+      dueYear: Number(formData.get(this.formKeys.dueMonth)) || null,
       title: formData.get(this.formKeys.title) as string,
       type: formData.get(this.formKeys.type) as ExpenseType,
     };
