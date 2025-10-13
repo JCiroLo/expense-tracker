@@ -3,8 +3,7 @@
 A simple expense tracker using React, Firebase and Material UI
 
 ## ToDos
-- [ ] Add light mode
-- [ ] Add auth error handling
-- [ ] Add analytics
-- [ ] Add feedback alerts
-- [ ] Cancel records instead of deleting them
+- Add analytics
+- Add feedback alerts
+- Add auth error handling
+- Autopaying (it automatically check an expense when it reaches the due date)

@@ -3,14 +3,14 @@ import { useTheme } from "@mui/material";
 import { SparkLineChart } from "@mui/x-charts/SparkLineChart";
 import { areaElementClasses, lineElementClasses } from "@mui/x-charts/LineChart";
 import { chartsAxisHighlightClasses } from "@mui/x-charts/ChartsAxisHighlight";
-import useExpenseTracker from "@/hooks/use-expense-tracker";
+import useExpenses from "@/hooks/use-expenses";
 import useSettingsStore from "@/stores/use-settings-store";
 import DateTools from "@/tools/date-tools";
 
 const FinancialStressChart: React.FC = () => {
   const theme = useTheme();
-  const { templates } = useExpenseTracker();
   const { selectedTab } = useSettingsStore();
+  const { templates } = useExpenses();
 
   const chart = React.useMemo(() => {
     let data: number[] = [];

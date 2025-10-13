@@ -1,6 +1,7 @@
 import React from "react";
 import { Navigate } from "react-router";
 import useSessionStore from "@/stores/use-session-store";
+import Logger from "@/lib/logger";
 import type { RouteScope } from "@/types/global";
 
 type PrivateRouteProps<Props> = {
@@ -25,7 +26,7 @@ const PrivateRoute = <P extends React.JSX.IntrinsicAttributes>({
     return <Navigate to="/" />;
   }
 
-  console.log("rendering");
+  Logger.log("rendering");
 
   return <Component {...(componentProps as P)} />;
 };

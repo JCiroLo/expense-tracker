@@ -10,7 +10,7 @@ const Loader: React.FC<LoaderProps> = ({ show }) => {
   return (
     <Fade in={show}>
       <Stack
-        position="absolute"
+        position="fixed"
         zIndex={9999}
         top={0}
         left={0}

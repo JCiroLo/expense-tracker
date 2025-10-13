@@ -1,12 +1,12 @@
 import React, { useMemo } from "react";
 import { PieChart } from "@mui/x-charts/PieChart";
-import useExpenseTracker from "@/hooks/use-expense-tracker";
+import useExpenses from "@/hooks/use-expenses";
 import { useTheme } from "@mui/material";
 import ColorTools from "@/tools/color-tools";
 
 const DistributionChart = () => {
   const theme = useTheme();
-  const { templates } = useExpenseTracker();
+  const { templates } = useExpenses();
 
   const data = React.useMemo(
     () => [

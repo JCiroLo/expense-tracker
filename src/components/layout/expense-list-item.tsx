@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { Checkbox, CircularProgress, IconButton, ListItem, ListItemButton, ListItemText } from "@mui/material";
 import EllipsisIcon from "@/components/icons/ellipsis-icon";
-import useExpenseTracker from "@/hooks/use-expense-tracker";
+import useExpenses from "@/hooks/use-expenses";
 import useHighlighter from "@/hooks/use-highlighter";
 import CurrencyTools from "@/tools/currency-tools";
 import DateTools from "@/tools/date-tools";
@@ -15,18 +15,18 @@ type ExpenseListItemProps = {
 };
 
 const ExpenseListItem: React.FC<ExpenseListItemProps> = ({ template, loading, onCheck, onMenu }) => {
-  const { records } = useExpenseTracker();
   const highlighter = useHighlighter();
+  const { records } = useExpenses();
 
   const record = useMemo(() => records.indexed[template.id], [template.id, records.indexed]);
 
   const helperText = useMemo(() => {
     if (template.type === "one-time") {
-      return `Pago único hecho el ${DateTools.format(record.created_at, "d [de] MMMM [del] YYYY")}`;
+      return `Pago único hecho el ${DateTools.format(record?.created_at, "D [de] MMMM [del] YYYY")}`;
     }
 
     if (record) {
-      return `Pagado el ${DateTools.format(record.created_at, "d [de] MMMM [del] YYYY")}`;
+      return `Pagado el ${DateTools.format(record.created_at, "D [de] MMMM [del] YYYY")}`;
     }
 
     if (template.type === "annual") {

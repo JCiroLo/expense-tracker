@@ -44,7 +44,7 @@ const Signin = () => {
 
     try {
       await sendSignInLinkToEmail(auth, email, {
-        url: `${Env.APP_URL}/signin?verify=${email}`,
+        url: `${Env.APP_URL}/signin?verify=${encodeURIComponent(email)}`,
         handleCodeInApp: true,
       });
 
@@ -58,7 +58,7 @@ const Signin = () => {
 
   useAsyncEffect(async () => {
     if (verify) {
-      const email = verify;
+      const email = decodeURIComponent(verify);
       const url = window.location.href;
 
       if (isSignInWithEmailLink(auth, url)) {

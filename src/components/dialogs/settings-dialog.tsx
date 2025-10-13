@@ -28,7 +28,7 @@ import InfoIcon from "@/components/icons/info-icon";
 import ShapesIcon from "@/components/icons/shapes-icon";
 import TrashIcon from "@/components/icons/trash-icon";
 import UserIcon from "@/components/icons/user-icon";
-import useExpenseTracker from "@/hooks/use-expense-tracker";
+import useCategories from "@/hooks/use-categories";
 import useSettingsStore from "@/stores/use-settings-store";
 import type { AccentColor } from "@/types/global";
 
@@ -107,7 +107,7 @@ const SettingsAppearance = () => {
 };
 
 const SettingsCategories = () => {
-  const { categories } = useExpenseTracker();
+  const { categories } = useCategories();
 
   if (categories.length === 0) {
     return (

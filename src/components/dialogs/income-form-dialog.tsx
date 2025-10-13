@@ -15,33 +15,34 @@ import { NumericFormat } from "react-number-format";
 import useCategories from "@/hooks/use-categories";
 import useFilters from "@/hooks/use-filters";
 import ExpenseCategoryForm, { type ExpenseCategoryFormObject } from "@/forms/expense-category-form";
-import ExpenseTemplateForm, { type ExpenseTemplateFormObject } from "@/forms/expense-template-form";
-import $ExpenseCategory from "@/services/expense-category";
-import $ExpenseTemplate from "@/services/expense-template";
-import $ExpenseRecord from "@/services/expense-record";
+import IncomeTemplateForm, { type IncomeTemplateFormObject } from "@/forms/income-template-form";
+import $Category from "@/services/expense-category";
+import $IncomeTemplate from "@/services/income-template";
+import $IncomeRecord from "@/services/income-record";
 import useSessionStore from "@/stores/use-session-store";
 import DateTools from "@/tools/date-tools";
 import queryClient from "@/lib/query-client";
-import type { ExpenseCategory, ExpenseTemplate, ExpenseType } from "@/types/expense";
+import type { ExpenseCategory } from "@/types/expense";
+import type { IncomeTemplate, IncomeType } from "@/types/income";
 
-type ExpenseFormDialogProps = {
+type IncomeFormDialogProps = {
   open: boolean;
   onClose: () => void;
-  template?: ExpenseTemplate;
+  template?: IncomeTemplate;
 };
 
-const ExpenseFormDialog: React.FC<ExpenseFormDialogProps> = ({ open, onClose, template }) => {
+const IncomeFormDialog: React.FC<IncomeFormDialogProps> = ({ open, onClose, template }) => {
   const user = useSessionStore((state) => state.user);
 
   const { categories } = useCategories();
   const { filters } = useFilters();
 
-  const [type, setType] = React.useState<ExpenseType | "none">("none");
+  const [type, setType] = React.useState<IncomeType | "none">("none");
   const [category, setCategory] = React.useState<string | "add-category" | "none">(template?.category_id || "none");
   const [isLoading, setIsLoading] = React.useState(false);
 
   function handleTypeChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const value = event.target.value as ExpenseType | "none";
+    const value = event.target.value as IncomeType | "none";
 
     setType(value);
   }
@@ -53,7 +54,7 @@ const ExpenseFormDialog: React.FC<ExpenseFormDialogProps> = ({ open, onClose, te
   }
 
   async function handleCategoryCreation(formData: ExpenseCategoryFormObject) {
-    const response = await $ExpenseCategory.create({ name: formData.name, color: formData.color, user_id: user!.uid });
+    const response = await $Category.create({ name: formData.name, color: formData.color, user_id: user!.uid });
 
     if (response.error) {
       // TODO: show error and try again message
@@ -63,8 +64,8 @@ const ExpenseFormDialog: React.FC<ExpenseFormDialogProps> = ({ open, onClose, te
     return response.data;
   }
 
-  async function handleOneTimeCreation(formData: ExpenseTemplateFormObject) {
-    const template = await $ExpenseTemplate.create({
+  async function handleOneTimeCreation(formData: IncomeTemplateFormObject) {
+    const template = await $IncomeTemplate.create({
       amount: formData.amount,
       category_id: formData.categoryId,
       due_day: DateTools.day,
@@ -80,7 +81,7 @@ const ExpenseFormDialog: React.FC<ExpenseFormDialogProps> = ({ open, onClose, te
       return null;
     }
 
-    const record = await $ExpenseRecord.create({
+    const record = await $IncomeRecord.create({
       category_id: formData.categoryId,
       paid_at_month: filters.month,
       paid_at_year: filters.year,
@@ -98,13 +99,13 @@ const ExpenseFormDialog: React.FC<ExpenseFormDialogProps> = ({ open, onClose, te
     };
   }
 
-  async function handleTemplateCreation(formData: ExpenseTemplateFormObject) {
+  async function handleTemplateCreation(formData: IncomeTemplateFormObject) {
     if (type === "none") {
       return;
     }
 
     if (template) {
-      await $ExpenseTemplate.update(template.id, {
+      await $IncomeTemplate.update(template.id, {
         type,
         amount: formData.amount,
         category_id: formData.categoryId,
@@ -113,7 +114,7 @@ const ExpenseFormDialog: React.FC<ExpenseFormDialogProps> = ({ open, onClose, te
         title: formData.title,
       });
     } else {
-      await $ExpenseTemplate.create({
+      await $IncomeTemplate.create({
         type,
         amount: formData.amount,
         category_id: formData.categoryId,
@@ -132,7 +133,7 @@ const ExpenseFormDialog: React.FC<ExpenseFormDialogProps> = ({ open, onClose, te
     let newCategory: ExpenseCategory | null = null;
     const formData = new FormData(event.target as HTMLFormElement);
     const formCategory = ExpenseCategoryForm.toObject(formData);
-    const formTemplate = ExpenseTemplateForm.toObject(formData);
+    const formTemplate = IncomeTemplateForm.toObject(formData);
 
     // Step 1: validate form
 
@@ -192,7 +193,7 @@ const ExpenseFormDialog: React.FC<ExpenseFormDialogProps> = ({ open, onClose, te
       await handleTemplateCreation({ ...formTemplate, categoryId });
     }
 
-    await queryClient.invalidateQueries({ queryKey: ["fetch-expense-templates", user?.uid, filters] });
+    await queryClient.invalidateQueries({ queryKey: ["fetch-income-templates", user?.uid, filters] });
 
     setIsLoading(false);
 
@@ -211,15 +212,15 @@ const ExpenseFormDialog: React.FC<ExpenseFormDialogProps> = ({ open, onClose, te
 
   return (
     <Dialog maxWidth="sm" open={open} fullWidth onClose={onClose}>
-      <DialogTitle>{template ? "Editar pago" : "Agregar gasto"}</DialogTitle>
+      <DialogTitle>{template ? "Editar ingreso" : "Agregar ingreso"}</DialogTitle>
       <DialogContent>
-        <Stack id="expense-form" component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
+        <Stack id="income-form" component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
           <Stack spacing={2}>
-            <TextField label="Título" name={ExpenseTemplateForm.formKeys.title} fullWidth required defaultValue={template?.title} />
+            <TextField label="Título" name={IncomeTemplateForm.formKeys.title} fullWidth required defaultValue={template?.title} />
             <NumericFormat
               customInput={TextField}
               label="Monto"
-              name={ExpenseTemplateForm.formKeys.amount}
+              name={IncomeTemplateForm.formKeys.amount}
               sx={{ width: "100%" }}
               slotProps={{
                 input: {
@@ -233,7 +234,7 @@ const ExpenseFormDialog: React.FC<ExpenseFormDialogProps> = ({ open, onClose, te
             />
             <TextField
               label="Tipo"
-              name={ExpenseTemplateForm.formKeys.type}
+              name={IncomeTemplateForm.formKeys.type}
               value={type}
               select
               fullWidth
@@ -245,23 +246,23 @@ const ExpenseFormDialog: React.FC<ExpenseFormDialogProps> = ({ open, onClose, te
               </MenuItem>
               <MenuItem value="monthly">Mensual</MenuItem>
               <MenuItem value="annual">Anual</MenuItem>
-              <MenuItem value="one-time">Pago único</MenuItem>
+              <MenuItem value="one-time">Ingreso único</MenuItem>
             </TextField>
             {type !== "none" && type !== "one-time" && (
               <>
                 {type === "monthly" ? (
                   <TextField
-                    label="Día típico de vencimiento"
+                    label="Día esperado de ingreso"
                     type="number"
-                    name={ExpenseTemplateForm.formKeys.dueDay}
+                    name={IncomeTemplateForm.formKeys.dueDay}
                     defaultValue={template?.due_day}
                     fullWidth
                     required
                   />
                 ) : (
                   <TextField
-                    label="Mes típico de vencimiento"
-                    name={ExpenseTemplateForm.formKeys.dueMonth}
+                    label="Mes esperado de ingreso"
+                    name={IncomeTemplateForm.formKeys.dueMonth}
                     defaultValue={template?.due_month || "none"}
                     select
                     fullWidth
@@ -281,7 +282,7 @@ const ExpenseFormDialog: React.FC<ExpenseFormDialogProps> = ({ open, onClose, te
             )}
             <TextField
               label="Categoría"
-              name={ExpenseTemplateForm.formKeys.categoryId}
+              name={IncomeTemplateForm.formKeys.categoryId}
               value={category}
               select
               fullWidth
@@ -308,7 +309,7 @@ const ExpenseFormDialog: React.FC<ExpenseFormDialogProps> = ({ open, onClose, te
         <Button variant="outlined" fullWidth onClick={onClose}>
           Cancelar
         </Button>
-        <Button variant="contained" type="submit" form="expense-form" loading={isLoading} fullWidth>
+        <Button variant="contained" type="submit" form="income-form" loading={isLoading} fullWidth>
           {template ? "Editar" : "Crear"}
         </Button>
       </DialogActions>
@@ -316,4 +317,4 @@ const ExpenseFormDialog: React.FC<ExpenseFormDialogProps> = ({ open, onClose, te
   );
 };
 
-export default ExpenseFormDialog;
+export default IncomeFormDialog;

@@ -1,6 +1,6 @@
 import React from "react";
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, Typography } from "@mui/material";
-import useExpenseTracker from "@/hooks/use-expense-tracker";
+import useExpenses from "@/hooks/use-expenses";
 import $ExpenseTemplate from "@/services/expense-template";
 import type { ExpenseTemplate } from "@/types/expense";
 
@@ -11,7 +11,7 @@ type RemoveExpenseDialogProps = {
 };
 
 const RemoveExpenseDialog: React.FC<RemoveExpenseDialogProps> = ({ open, template, onClose }) => {
-  const { refresh } = useExpenseTracker();
+  const { refresh } = useExpenses();
 
   const [isLoading, setIsLoading] = React.useState(false);
 

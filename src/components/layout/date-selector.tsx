@@ -1,12 +1,12 @@
 import ListSelector from "@/components/ui/list-selector";
-import useExpenseTracker from "@/hooks/use-expense-tracker";
-import useSettingsStore from "@/stores/use-settings-store";
 import DateTools from "@/tools/date-tools";
+import useFilters from "@/hooks/use-filters";
+import useSettingsStore from "@/stores/use-settings-store";
 
 const DateSelector = () => {
   const { selectedTab } = useSettingsStore();
 
-  const { filters, updateFilters } = useExpenseTracker();
+  const { filters, updateFilters } = useFilters();
 
   function handleMonthChange(newMonth: string | number) {
     updateFilters({ month: Number(newMonth) });

@@ -1,25 +1,21 @@
 import React, { useMemo } from "react";
 import { type QueryObserverResult, type RefetchOptions, useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
-import Loader from "@/components/layout/loader";
-import $ExpenseCategory from "@/services/expense-category";
+import useFilters from "@/hooks/use-filters";
 import $ExpenseRecord from "@/services/expense-record";
 import $ExpenseTemplate from "@/services/expense-template";
 import useSessionStore from "@/stores/use-session-store";
 import ArrayTools from "@/tools/array-tools";
-import DateTools from "@/tools/date-tools";
 import Env from "@/lib/env";
-import type { ExpenseCategory, ExpenseRecord, ExpenseTemplate } from "@/types/expense";
+import Logger from "@/lib/logger";
+import type { ExpenseRecord, ExpenseTemplate } from "@/types/expense";
 
-type ExenseTrackerFilters = {
-  month: number;
-  year: number;
-};
-
-type ExpenseTrackerContextType = {
-  categories: ExpenseCategory[];
-  filters: ExenseTrackerFilters;
+type ExpenseContextType = {
   isLoading: boolean;
+  queries: {
+    templates: ReturnType<typeof useQuery>;
+    records: ReturnType<typeof useQuery>;
+  };
   templates: {
     all: ExpenseTemplate[];
     annual: ExpenseTemplate[];
@@ -31,18 +27,16 @@ type ExpenseTrackerContextType = {
   records: {
     indexed: Record<string, ExpenseRecord>;
     all: ExpenseRecord[];
-    oneTime: ExpenseRecord[]; // Pagos únicos del mes actual
+    oneTime: ExpenseRecord[];
   };
   refresh: {
-    categories: (options?: RefetchOptions) => Promise<QueryObserverResult>;
     templates: (options?: RefetchOptions) => Promise<QueryObserverResult>;
     records: (options?: RefetchOptions) => Promise<QueryObserverResult>;
     all: (options?: RefetchOptions) => Promise<QueryObserverResult>;
   };
-  updateFilters: (newFilters: Partial<ExenseTrackerFilters>) => void;
 };
 
-type ExpenseTrackerProviderProps = {
+type ExpenseProviderProps = {
   children: React.ReactNode;
 };
 
@@ -62,37 +56,15 @@ const defaultTemplates = {
   oneTime: [] as ExpenseTemplate[],
 };
 
-const ExpenseTrackerContext = React.createContext<ExpenseTrackerContextType>(null!);
+const ExpenseContext = React.createContext<ExpenseContextType>(null!);
 
-const ExpenseTrackerProvider: React.FC<ExpenseTrackerProviderProps> = ({ children }) => {
+const ExpenseProvider: React.FC<ExpenseProviderProps> = ({ children }) => {
   const user = useSessionStore((state) => state.user);
 
-  const [filters, setFilters] = React.useState<ExenseTrackerFilters>({
-    month: DateTools.month,
-    year: DateTools.year,
-  });
-
-  const categories = useQuery({
-    queryKey: ["fetch-categories", user?.uid],
-    queryFn: async () => {
-      if (!user) {
-        return [];
-      }
-
-      const { error, data } = await $ExpenseCategory.getAll({ userId: user.uid });
-
-      if (error) {
-        throw error;
-      }
-
-      console.log("fetched categories");
-
-      return data;
-    },
-  });
+  const { filters } = useFilters();
 
   const templates = useQuery({
-    queryKey: ["fetch-templates", user?.uid, filters],
+    queryKey: ["fetch-expense-templates", user?.uid, filters],
     queryFn: async () => {
       if (!user) {
         return defaultTemplates;
@@ -107,7 +79,7 @@ const ExpenseTrackerProvider: React.FC<ExpenseTrackerProviderProps> = ({ childre
       const all = Object.values(data);
       const { annual, monthly, "one-time": oneTime } = Object.groupBy(all, (record) => record.type);
 
-      console.log("fetched templates", data);
+      Logger.log("fetched expense templates", data);
 
       return {
         all,
@@ -123,7 +95,7 @@ const ExpenseTrackerProvider: React.FC<ExpenseTrackerProviderProps> = ({ childre
 
   const records = useQuery({
     enabled: Boolean(templates.data),
-    queryKey: ["fetch-records", user?.uid, filters],
+    queryKey: ["fetch-expense-records", user?.uid, filters],
     queryFn: async () => {
       if (!user || !templates.data) {
         return defaultRecords;
@@ -150,7 +122,7 @@ const ExpenseTrackerProvider: React.FC<ExpenseTrackerProviderProps> = ({ childre
         return template.type === "one-time";
       });
 
-      console.log("fetched records", data);
+      Logger.log("fetched expense records", data);
 
       return { indexed, all: data, oneTime: oneTimeRecords };
     },
@@ -166,7 +138,7 @@ const ExpenseTrackerProvider: React.FC<ExpenseTrackerProviderProps> = ({ childre
       const diff = dueDate.diff(today, "day");
       const paid = records.data?.indexed[template.id] || false;
 
-      if (diff <= Env.MAX_DAYS_EXPIRATION_DANGER && !paid) {
+      if (diff < Env.MAX_DAYS_EXPIRATION_DANGER && !paid) {
         expired.push(template);
         return;
       }
@@ -180,23 +152,20 @@ const ExpenseTrackerProvider: React.FC<ExpenseTrackerProviderProps> = ({ childre
     return { closeToExpire, expired };
   }, [templates.data, records]);
 
-  function updateFilters(newFilters: Partial<ExenseTrackerFilters>) {
-    setFilters((prev) => ({ ...prev, ...newFilters }));
-  }
-
   async function refetch(options?: RefetchOptions) {
-    return Promise.all([categories.refetch(options), templates.refetch(options), records.refetch(options)]).then(([a]) => a);
+    return Promise.all([templates.refetch(options), records.refetch(options)]).then(([a]) => a);
   }
 
-  const isLoading = categories.isFetching || templates.isFetching || records.isFetching;
+  const isLoading = templates.isLoading || records.isLoading;
 
   return (
-    <ExpenseTrackerContext.Provider
+    <ExpenseContext.Provider
       value={{
-        filters,
         isLoading,
-        updateFilters,
-        categories: categories.data || [],
+        queries: {
+          templates,
+          records,
+        },
         templates: {
           ...(templates.data || defaultTemplates),
           closeToExpire: expiration.closeToExpire,
@@ -204,7 +173,6 @@ const ExpenseTrackerProvider: React.FC<ExpenseTrackerProviderProps> = ({ childre
         },
         records: records.data || defaultRecords,
         refresh: {
-          categories: categories.refetch,
           templates: templates.refetch,
           records: records.refetch,
           all: refetch,
@@ -212,10 +180,9 @@ const ExpenseTrackerProvider: React.FC<ExpenseTrackerProviderProps> = ({ childre
       }}
     >
       {children}
-      <Loader show={isLoading} />
-    </ExpenseTrackerContext.Provider>
+    </ExpenseContext.Provider>
   );
 };
 
-export { ExpenseTrackerContext };
-export default ExpenseTrackerProvider;
+export { ExpenseContext };
+export default ExpenseProvider;

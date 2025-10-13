@@ -1,16 +1,23 @@
 import { useMemo, useState } from "react";
-import { List, Typography, Menu, MenuItem, Divider } from "@mui/material";
+import { List, Typography, Menu, MenuItem, Divider, ListItemIcon } from "@mui/material";
 import ExpenseListItem from "@/components/layout/expense-list-item";
+import CheckIcon from "@/components/icons/check-icon";
+import EditIcon from "@/components/icons/edit-icon";
+import TimesIcon from "@/components/icons/times-icon";
+import TrashIcon from "@/components/icons/trash-icon";
 import useDialog from "@/hooks/use-dialog";
-import useExpenseTracker from "@/hooks/use-expense-tracker";
+import useExpenses from "@/hooks/use-expenses";
+import useFilters from "@/hooks/use-filters";
 import useSettingsStore from "@/stores/use-settings-store";
 import $ExpenseRecord from "@/services/expense-record";
 import type { ExpenseRecord, ExpenseTemplate } from "@/types/expense";
 
 const ExpenseList = () => {
-  const { templates, records, filters, refresh, isLoading: fetching } = useExpenseTracker();
   const selectedTab = useSettingsStore((state) => state.selectedTab);
   const dialog = useDialog();
+
+  const { templates, records, refresh, isLoading: fetching } = useExpenses();
+  const { filters } = useFilters();
 
   const [menuAnchor, setMenuAnchor] = useState({
     template: null as ExpenseTemplate | null,
@@ -22,7 +29,10 @@ const ExpenseList = () => {
     template: null as ExpenseTemplate | null,
   });
 
-  const selectedTemplates = useMemo(() => [...templates[selectedTab], ...templates.oneTime], [selectedTab, templates]);
+  const selectedTemplates = useMemo(
+    () => [...templates[selectedTab], ...(selectedTab === "monthly" ? templates.oneTime : [])],
+    [selectedTab, templates]
+  );
 
   function handleMenuOpen(event: React.MouseEvent<HTMLElement>, template: ExpenseTemplate) {
     const record = records.indexed[template.id] || null;
@@ -103,6 +113,9 @@ const ExpenseList = () => {
               handleMenuClose();
             }}
           >
+            <ListItemIcon sx={{ color: "inherit" }}>
+              <TimesIcon fontSize="small" />
+            </ListItemIcon>
             Marcar como no pagado
           </MenuItem>
         ) : (
@@ -112,6 +125,9 @@ const ExpenseList = () => {
               handleMenuClose();
             }}
           >
+            <ListItemIcon sx={{ color: "inherit" }}>
+              <CheckIcon fontSize="small" />
+            </ListItemIcon>
             Marcar como pagado
           </MenuItem>
         )}
@@ -123,6 +139,9 @@ const ExpenseList = () => {
             handleMenuClose();
           }}
         >
+          <ListItemIcon sx={{ color: "inherit" }}>
+            <EditIcon fontSize="small" />
+          </ListItemIcon>
           Editar gasto
         </MenuItem>
         <MenuItem
@@ -132,6 +151,9 @@ const ExpenseList = () => {
             handleMenuClose();
           }}
         >
+          <ListItemIcon>
+            <TrashIcon fontSize="small" color="error" />
+          </ListItemIcon>
           Eliminar gasto
         </MenuItem>
       </Menu>

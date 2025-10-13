@@ -3,12 +3,12 @@ import { Paper, Stack, Typography } from "@mui/material";
 import { Gauge } from "@mui/x-charts";
 import DistributionChart from "@/components/charts/distribution-chart";
 import FinancialStressChart from "@/components/charts/financial-stress-chart";
-import useExpenseTracker from "@/hooks/use-expense-tracker";
+import useExpenses from "@/hooks/use-expenses";
 import useSettingsStore from "@/stores/use-settings-store";
 import CurrencyTools from "@/tools/currency-tools";
 
 const Analytics = () => {
-  const { templates, records } = useExpenseTracker();
+  const { templates, records } = useExpenses();
   const { selectedTab } = useSettingsStore();
 
   const totals = useMemo(() => {
