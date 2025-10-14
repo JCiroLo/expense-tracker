@@ -1,6 +1,10 @@
 {
-  "version": "1.0.0",
+  "version": "1.0.1",
   "features": [
+    {
+      "title": "¡Ahora puedes registrar tus ingresos!",
+      "description": "Lleva un control completo de tus finanzas con la nueva funcionalidad de ingresos."
+    },
     {
       "title": "Nueva vista de reportes con gráficos dinámicos.",
       "description": "Visualiza tus datos de manera más clara con gráficos interactivos y personalizables."

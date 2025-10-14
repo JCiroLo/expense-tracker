@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { type QueryObserverResult, type RefetchOptions, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import useFilters from "@/hooks/use-filters";
 import $ExpenseRecord from "@/services/expense-record";
@@ -7,6 +7,7 @@ import $ExpenseTemplate from "@/services/expense-template";
 import useSessionStore from "@/stores/use-session-store";
 import ArrayTools from "@/tools/array-tools";
 import Env from "@/lib/env";
+import queryClient from "@/lib/query-client";
 import Logger from "@/lib/logger";
 import type { ExpenseRecord, ExpenseTemplate } from "@/types/expense";
 
@@ -30,9 +31,9 @@ type ExpenseContextType = {
     oneTime: ExpenseRecord[];
   };
   refresh: {
-    templates: (options?: RefetchOptions) => Promise<QueryObserverResult>;
-    records: (options?: RefetchOptions) => Promise<QueryObserverResult>;
-    all: (options?: RefetchOptions) => Promise<QueryObserverResult>;
+    templates: () => Promise<void>;
+    records: () => Promise<void>;
+    all: () => Promise<void>;
   };
 };
 
@@ -152,16 +153,22 @@ const ExpenseProvider: React.FC<ExpenseProviderProps> = ({ children }) => {
     return { closeToExpire, expired };
   }, [templates.data, records]);
 
-  async function refetch(options?: RefetchOptions) {
-    return Promise.all([templates.refetch(options), records.refetch(options)]).then(([a]) => a);
+  async function refreshTemplates() {
+    await queryClient.invalidateQueries({ queryKey: ["fetch-expense-templates", user?.uid, filters] });
   }
 
-  const isLoading = templates.isLoading || records.isLoading;
+  async function refreshRecords() {
+    await queryClient.invalidateQueries({ queryKey: ["fetch-expense-records", user?.uid, filters] });
+  }
+
+  async function refetch() {
+    return Promise.all([refreshTemplates(), refreshRecords()]).then(([a]) => a);
+  }
 
   return (
     <ExpenseContext.Provider
       value={{
-        isLoading,
+        isLoading: templates.isLoading || records.isLoading,
         queries: {
           templates,
           records,
@@ -173,8 +180,8 @@ const ExpenseProvider: React.FC<ExpenseProviderProps> = ({ children }) => {
         },
         records: records.data || defaultRecords,
         refresh: {
-          templates: templates.refetch,
-          records: records.refetch,
+          templates: refreshTemplates,
+          records: refreshRecords,
           all: refetch,
         },
       }}

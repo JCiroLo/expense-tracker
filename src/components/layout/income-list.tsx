@@ -1,32 +1,32 @@
 import { useMemo, useState } from "react";
 import { Menu, MenuItem, Divider, ListItemIcon } from "@mui/material";
-import ExpenseListItem from "@/components/layout/expense-list-item";
+import IncomeListItem from "@/components/layout/income-list-item";
 import CheckIcon from "@/components/icons/check-icon";
 import EditIcon from "@/components/icons/edit-icon";
 import TimesIcon from "@/components/icons/times-icon";
 import TrashIcon from "@/components/icons/trash-icon";
 import useDialog from "@/hooks/use-dialog";
-import useExpenses from "@/hooks/use-expenses";
+import useIncomes from "@/hooks/use-incomes";
 import useFilters from "@/hooks/use-filters";
 import useSettingsStore from "@/stores/use-settings-store";
-import $ExpenseRecord from "@/services/expense-record";
-import type { ExpenseRecord, ExpenseTemplate } from "@/types/expense";
+import $IncomeRecord from "@/services/income-record";
+import type { IncomeRecord, IncomeTemplate } from "@/types/income";
 
-const ExpenseList = () => {
+const IncomeList = () => {
   const selectedTab = useSettingsStore((state) => state.selectedTab);
   const dialog = useDialog();
 
-  const { templates, records, refresh } = useExpenses();
+  const { templates, records, refresh } = useIncomes();
   const { filters } = useFilters();
 
   const [menuAnchor, setMenuAnchor] = useState({
-    template: null as ExpenseTemplate | null,
-    record: null as ExpenseRecord | null,
+    template: null as IncomeTemplate | null,
+    record: null as IncomeRecord | null,
     element: null as HTMLElement | null,
     isPaid: false,
   });
   const [isLoading, setIsLoading] = useState({
-    template: null as ExpenseTemplate | null,
+    template: null as IncomeTemplate | null,
   });
 
   const selectedTemplates = useMemo(
@@ -34,7 +34,7 @@ const ExpenseList = () => {
     [selectedTab, templates]
   );
 
-  function handleMenuOpen(event: React.MouseEvent<HTMLElement>, template: ExpenseTemplate) {
+  function handleMenuOpen(event: React.MouseEvent<HTMLElement>, template: IncomeTemplate) {
     const record = records.indexed[template.id] || null;
     const paid = Boolean(record);
 
@@ -55,10 +55,10 @@ const ExpenseList = () => {
     }));
   }
 
-  async function handleMarkAsPaid(template: ExpenseTemplate) {
+  async function handleMarkAsPaid(template: IncomeTemplate) {
     setIsLoading((prev) => ({ ...prev, template }));
 
-    const record = await $ExpenseRecord.create({
+    const record = await $IncomeRecord.create({
       category_id: template.category_id,
       paid_at_month: filters.month,
       paid_at_year: filters.year,
@@ -73,10 +73,10 @@ const ExpenseList = () => {
     setIsLoading((prev) => ({ ...prev, template: null }));
   }
 
-  async function handleMarkAsUnpaid(template: ExpenseTemplate, record: ExpenseRecord) {
+  async function handleMarkAsUnpaid(template: IncomeTemplate, record: IncomeRecord) {
     setIsLoading((prev) => ({ ...prev, template }));
 
-    const response = await $ExpenseRecord.delete(record.id);
+    const response = await $IncomeRecord.delete(record.id);
 
     if (!response.error) {
       await refresh.records();
@@ -88,7 +88,7 @@ const ExpenseList = () => {
   return (
     <>
       {selectedTemplates.map((template) => (
-        <ExpenseListItem
+        <IncomeListItem
           key={template.id}
           template={template}
           loading={isLoading.template?.id === template.id}
@@ -108,7 +108,7 @@ const ExpenseList = () => {
             <ListItemIcon sx={{ color: "inherit" }}>
               <TimesIcon fontSize="small" />
             </ListItemIcon>
-            Marcar como no pagado
+            Marcar como no recibido
           </MenuItem>
         ) : (
           <MenuItem
@@ -120,37 +120,37 @@ const ExpenseList = () => {
             <ListItemIcon sx={{ color: "inherit" }}>
               <CheckIcon fontSize="small" />
             </ListItemIcon>
-            Marcar como pagado
+            Marcar como recibido
           </MenuItem>
         )}
         <Divider />
         <MenuItem
           disabled={menuAnchor.template?.type === "one-time"}
           onClick={() => {
-            dialog.open("manage-expense-template", menuAnchor.template);
+            dialog.open("manage-income-template", menuAnchor.template);
             handleMenuClose();
           }}
         >
           <ListItemIcon sx={{ color: "inherit" }}>
             <EditIcon fontSize="small" />
           </ListItemIcon>
-          Editar gasto
+          Editar ingreso
         </MenuItem>
         <MenuItem
           sx={{ color: "error.main" }}
           onClick={() => {
-            dialog.open("remove-expense-template", menuAnchor.template);
+            dialog.open("remove-income-template", menuAnchor.template);
             handleMenuClose();
           }}
         >
           <ListItemIcon>
             <TrashIcon fontSize="small" color="error" />
           </ListItemIcon>
-          Eliminar gasto
+          Eliminar ingreso
         </MenuItem>
       </Menu>
     </>
   );
 };
 
-export default ExpenseList;
+export default IncomeList;

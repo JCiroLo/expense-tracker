@@ -1,44 +1,44 @@
 import React, { useMemo } from "react";
 import { Checkbox, CircularProgress, IconButton, ListItem, ListItemButton, ListItemText } from "@mui/material";
-import ArrowDownIcon from "@/components/icons/arrow-down-icon";
+import ArrowUpIcon from "@/components/icons/arrow-up-icon";
 import EllipsisIcon from "@/components/icons/ellipsis-icon";
-import useExpenses from "@/hooks/use-expenses";
+import useIncomes from "@/hooks/use-incomes";
 import useHighlighter from "@/hooks/use-highlighter";
 import CurrencyTools from "@/tools/currency-tools";
 import DateTools from "@/tools/date-tools";
-import type { ExpenseTemplate } from "@/types/expense";
+import type { IncomeTemplate } from "@/types/income";
 
-type ExpenseListItemProps = {
-  template: ExpenseTemplate;
+type IncomeListItemProps = {
+  template: IncomeTemplate;
   loading: boolean;
-  onCheck: (template: ExpenseTemplate) => void;
-  onMenu: (event: React.MouseEvent<HTMLElement>, template: ExpenseTemplate) => void;
+  onCheck: (template: IncomeTemplate) => void;
+  onMenu: (event: React.MouseEvent<HTMLElement>, template: IncomeTemplate) => void;
 };
 
-const ExpenseListItem: React.FC<ExpenseListItemProps> = ({ template, loading, onCheck, onMenu }) => {
+const IncomeListItem: React.FC<IncomeListItemProps> = ({ template, loading, onCheck, onMenu }) => {
   const highlighter = useHighlighter();
-  const { records } = useExpenses();
+  const { records } = useIncomes();
 
   const record = useMemo(() => records.indexed[template.id], [template.id, records.indexed]);
 
   const helperText = useMemo(() => {
     if (template.type === "one-time") {
       if (record) {
-        return `Pago único hecho el ${DateTools.format(record.created_at, "D [de] MMMM [del] YYYY")}`;
+        return `Ingreso único recibido el ${DateTools.format(record.created_at, "D [de] MMMM [del] YYYY")}`;
       }
 
-      return `Pago único pendiente`;
+      return "Ingreso único pendiente de recibir";
     }
 
     if (record) {
-      return `Pagado el ${DateTools.format(record.created_at, "D [de] MMMM [del] YYYY")}`;
+      return `Recibido el ${DateTools.format(record.created_at, "D [de] MMMM [del] YYYY")}`;
     }
 
     if (template.type === "annual") {
-      return `Mes de vencimiento: ${DateTools.monthName(template.due_month!)}`;
+      return `Mes esperado de ingreso: ${DateTools.monthName(template.due_month!)}`;
     }
 
-    return `Día de vencimiento: ${template.due_day} de ${DateTools.monthName()}`;
+    return `Día esperado de ingreso: ${template.due_day} de ${DateTools.monthName()}`;
   }, [template, record]);
 
   const paid = Boolean(record);
@@ -61,11 +61,11 @@ const ExpenseListItem: React.FC<ExpenseListItemProps> = ({ template, loading, on
         onClick={() => onCheck(template)}
       >
         {loading ? <CircularProgress size={42} sx={{ padding: "9px" }} /> : <Checkbox checked={paid} tabIndex={-1} disableRipple />}
-        <ArrowDownIcon color="error" sx={{ fontSize: 20, mr: 1 }} />
+        <ArrowUpIcon color="success" sx={{ fontSize: 20, mr: 1 }} />
         <ListItemText primary={`${template.title} - ${CurrencyTools.format(template.amount)}`} secondary={helperText} />
       </ListItemButton>
     </ListItem>
   );
 };
 
-export default ExpenseListItem;
+export default IncomeListItem;

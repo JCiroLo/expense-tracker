@@ -1,7 +1,8 @@
 import React from "react";
-import { type QueryObserverResult, type RefetchOptions, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import $ExpenseCategory from "@/services/expense-category";
 import useSessionStore from "@/stores/use-session-store";
+import queryClient from "@/lib/query-client";
 import Logger from "@/lib/logger";
 import type { ExpenseCategory } from "@/types/expense";
 
@@ -9,7 +10,7 @@ type CategoryContextType = {
   categories: ExpenseCategory[];
   isLoading: boolean;
   query: ReturnType<typeof useQuery>;
-  refresh: (options?: RefetchOptions) => Promise<QueryObserverResult>;
+  refresh: () => Promise<void>;
 };
 
 type CategoryProviderProps = {
@@ -40,13 +41,17 @@ const CategoryProvider: React.FC<CategoryProviderProps> = ({ children }) => {
     },
   });
 
+  async function refreshCategories() {
+    await queryClient.invalidateQueries({ queryKey: ["fetch-categories", user?.uid] });
+  }
+
   return (
     <CategoryContext.Provider
       value={{
         categories: categories.data || [],
         isLoading: categories.isLoading,
         query: categories,
-        refresh: categories.refetch,
+        refresh: refreshCategories,
       }}
     >
       {children}

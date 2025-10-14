@@ -1,12 +1,13 @@
 import React, { useMemo } from "react";
-import { type QueryObserverResult, type RefetchOptions, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import useFilters from "@/hooks/use-filters";
-import $IncomeRecord from "@/services/expense-record";
-import $IncomeTemplate from "@/services/expense-template";
+import $IncomeRecord from "@/services/income-record";
+import $IncomeTemplate from "@/services/income-template";
 import useSessionStore from "@/stores/use-session-store";
 import ArrayTools from "@/tools/array-tools";
 import Env from "@/lib/env";
+import queryClient from "@/lib/query-client";
 import Logger from "@/lib/logger";
 import type { IncomeRecord, IncomeTemplate } from "@/types/income";
 
@@ -29,9 +30,9 @@ type IncomeContextType = {
     oneTime: IncomeRecord[];
   };
   refresh: {
-    templates: (options?: RefetchOptions) => Promise<QueryObserverResult>;
-    records: (options?: RefetchOptions) => Promise<QueryObserverResult>;
-    all: (options?: RefetchOptions) => Promise<QueryObserverResult>;
+    templates: () => Promise<void>;
+    records: () => Promise<void>;
+    all: () => Promise<void>;
   };
 };
 
@@ -144,16 +145,22 @@ const IncomeProvider: React.FC<IncomeProviderProps> = ({ children }) => {
     return { upcoming };
   }, [templates.data, records]);
 
-  async function refetch(options?: RefetchOptions) {
-    return Promise.all([templates.refetch(options), records.refetch(options)]).then(([a]) => a);
+  async function refreshTemplates() {
+    return await queryClient.invalidateQueries({ queryKey: ["fetch-income-templates", user?.uid, filters] });
   }
 
-  const isLoading = templates.isLoading || records.isLoading;
+  async function refreshRecords() {
+    return await queryClient.invalidateQueries({ queryKey: ["fetch-income-records", user?.uid, filters] });
+  }
+
+  async function refetch() {
+    return Promise.all([refreshTemplates(), refreshRecords()]).then(([a]) => a);
+  }
 
   return (
     <IncomeContext.Provider
       value={{
-        isLoading,
+        isLoading: templates.isLoading || records.isLoading,
         queries: {
           templates,
           records,
@@ -164,8 +171,8 @@ const IncomeProvider: React.FC<IncomeProviderProps> = ({ children }) => {
         },
         records: records.data || defaultRecords,
         refresh: {
-          templates: templates.refetch,
-          records: records.refetch,
+          templates: refreshTemplates,
+          records: refreshRecords,
           all: refetch,
         },
       }}

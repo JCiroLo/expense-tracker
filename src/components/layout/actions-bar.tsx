@@ -62,7 +62,6 @@ const ActionsBar = forwardRef<HTMLDivElement>((_, ref) => {
           Agregar gasto
         </MenuItem>
         <MenuItem
-          disabled
           onClick={() => {
             dialog.open("manage-income-template");
             handleMenuClose();

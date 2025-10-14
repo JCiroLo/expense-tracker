@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Dialog, DialogContent, DialogTitle, List, ListItem, ListItemText, Typography, Button, Stack, DialogActions } from "@mui/material";
+import { Dialog, DialogContent, DialogTitle, List, ListItem, ListItemText, Button, Stack, DialogActions } from "@mui/material";
 import features from "@/features.json";
 
 const STORAGE_KEY = "last-seen-features-version";
@@ -24,16 +24,13 @@ const FeaturesModal = () => {
     <Dialog open={open} maxWidth="md" slotProps={{ paper: { sx: { overflow: "hidden" } } }} fullWidth onClose={handleClose}>
       <DialogTitle>🚀 Novedades</DialogTitle>
       <DialogContent>
-        <Stack>
-          <Typography>¡Descubre las nuevas características de esta versión!</Typography>
-          <List>
-            {features.features.map((feature, index) => (
-              <ListItem key={index} disableGutters>
-                <ListItemText primary={feature.title} secondary={feature.description} />
-              </ListItem>
-            ))}
-          </List>
-        </Stack>
+        <List>
+          {features.features.map((feature, index) => (
+            <ListItem key={index} disableGutters>
+              <ListItemText primary={feature.title} secondary={feature.description} />
+            </ListItem>
+          ))}
+        </List>
       </DialogContent>
       <DialogActions>
         <Button variant="contained" color="primary" fullWidth onClick={handleClose}>
@@ -43,9 +40,11 @@ const FeaturesModal = () => {
       <Stack
         position="absolute"
         right={0}
-        width={{ xs: "100%", md: "50%" }}
+        width={{ xs: "100%", md: "25%" }}
+        height="100%"
         sx={{
-          opacity: { xs: 0.3, md: 0.75 },
+          opacity: { xs: 0.2, md: 0.75 },
+          pointerEvents: "none",
           "@keyframes image-spin": {
             "0%": { transform: "rotate(0deg)" },
             "100%": { transform: "rotate(360deg)" },

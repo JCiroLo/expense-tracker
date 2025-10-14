@@ -2,7 +2,7 @@ import { alpha, Chip } from "@mui/material";
 import Env from "@/lib/env";
 
 const EnvChip = () => {
-  const message = Env.APP_ENV === "development" ? "Development Environment" : null;
+  const message = Env.APP_ENV === "development" ? "Dev mode" : null;
 
   return message ? (
     <Chip

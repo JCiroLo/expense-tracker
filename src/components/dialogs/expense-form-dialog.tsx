@@ -13,6 +13,7 @@ import {
 } from "@mui/material";
 import { NumericFormat } from "react-number-format";
 import useCategories from "@/hooks/use-categories";
+import useExpenses from "@/hooks/use-expenses";
 import useFilters from "@/hooks/use-filters";
 import ExpenseCategoryForm, { type ExpenseCategoryFormObject } from "@/forms/expense-category-form";
 import ExpenseTemplateForm, { type ExpenseTemplateFormObject } from "@/forms/expense-template-form";
@@ -21,7 +22,6 @@ import $ExpenseTemplate from "@/services/expense-template";
 import $ExpenseRecord from "@/services/expense-record";
 import useSessionStore from "@/stores/use-session-store";
 import DateTools from "@/tools/date-tools";
-import queryClient from "@/lib/query-client";
 import type { ExpenseCategory, ExpenseTemplate, ExpenseType } from "@/types/expense";
 
 type ExpenseFormDialogProps = {
@@ -34,6 +34,7 @@ const ExpenseFormDialog: React.FC<ExpenseFormDialogProps> = ({ open, onClose, te
   const user = useSessionStore((state) => state.user);
 
   const { categories } = useCategories();
+  const { refresh } = useExpenses();
   const { filters } = useFilters();
 
   const [type, setType] = React.useState<ExpenseType | "none">("none");
@@ -144,11 +145,13 @@ const ExpenseFormDialog: React.FC<ExpenseFormDialogProps> = ({ open, onClose, te
       return;
     }
 
-    if (type === "monthly" && !formTemplate.dueDay) {
+    if (type === "monthly" && (!formTemplate.dueDay || formTemplate.dueDay < 1 || formTemplate.dueDay > 31)) {
+      // TODO: show error message
       return;
     }
 
-    if (type === "annual" && !formTemplate.dueMonth) {
+    if (type === "annual" && (!formTemplate.dueMonth || formTemplate.dueMonth < 1 || formTemplate.dueMonth > 12)) {
+      // TODO: show error message
       return;
     }
 
@@ -192,7 +195,7 @@ const ExpenseFormDialog: React.FC<ExpenseFormDialogProps> = ({ open, onClose, te
       await handleTemplateCreation({ ...formTemplate, categoryId });
     }
 
-    await queryClient.invalidateQueries({ queryKey: ["fetch-expense-templates", user?.uid, filters] });
+    await refresh.templates();
 
     setIsLoading(false);
 

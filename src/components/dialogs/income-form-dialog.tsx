@@ -13,6 +13,7 @@ import {
 } from "@mui/material";
 import { NumericFormat } from "react-number-format";
 import useCategories from "@/hooks/use-categories";
+import useIncomes from "@/hooks/use-incomes";
 import useFilters from "@/hooks/use-filters";
 import ExpenseCategoryForm, { type ExpenseCategoryFormObject } from "@/forms/expense-category-form";
 import IncomeTemplateForm, { type IncomeTemplateFormObject } from "@/forms/income-template-form";
@@ -21,7 +22,6 @@ import $IncomeTemplate from "@/services/income-template";
 import $IncomeRecord from "@/services/income-record";
 import useSessionStore from "@/stores/use-session-store";
 import DateTools from "@/tools/date-tools";
-import queryClient from "@/lib/query-client";
 import type { ExpenseCategory } from "@/types/expense";
 import type { IncomeTemplate, IncomeType } from "@/types/income";
 
@@ -35,6 +35,7 @@ const IncomeFormDialog: React.FC<IncomeFormDialogProps> = ({ open, onClose, temp
   const user = useSessionStore((state) => state.user);
 
   const { categories } = useCategories();
+  const { refresh } = useIncomes();
   const { filters } = useFilters();
 
   const [type, setType] = React.useState<IncomeType | "none">("none");
@@ -193,7 +194,7 @@ const IncomeFormDialog: React.FC<IncomeFormDialogProps> = ({ open, onClose, temp
       await handleTemplateCreation({ ...formTemplate, categoryId });
     }
 
-    await queryClient.invalidateQueries({ queryKey: ["fetch-income-templates", user?.uid, filters] });
+    await refresh.templates();
 
     setIsLoading(false);
 
