@@ -14,8 +14,8 @@ const Home = () => {
   const incomes = useIncomes();
 
   const isFetching = expenses.isLoading || incomes.isLoading;
-  const hasExpenses = Boolean(expenses.templates.all.length);
-  const hasIncomes = Boolean(incomes.templates.all.length);
+  const hasExpenses = Boolean(expenses.templates[selectedTab].length);
+  const hasIncomes = Boolean(incomes.templates[selectedTab].length);
 
   return (
     <>
@@ -25,8 +25,14 @@ const Home = () => {
       ) : (
         <List sx={{ height: "100%", overflowY: "auto" }} disablePadding>
           {!hasExpenses && !hasIncomes ? (
-            <Typography component="li" variant="body2" color="text.secondary" textAlign="center" sx={{ my: 2 }}>
-              No hay ingresos ni gastos registrados aún.
+            <Typography
+              component="li"
+              variant="body2"
+              color="text.secondary"
+              textAlign="center"
+              sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%" }}
+            >
+              No tienes gastos ni ingresos registrados aún.
             </Typography>
           ) : null}
           <ExpenseList />

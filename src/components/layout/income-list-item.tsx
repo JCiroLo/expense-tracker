@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { Checkbox, CircularProgress, IconButton, ListItem, ListItemButton, ListItemText } from "@mui/material";
-import ArrowUpIcon from "@/components/icons/arrow-up-icon";
+import TemplateTypeIcon from "@/components/layout/template-type-icon";
 import EllipsisIcon from "@/components/icons/ellipsis-icon";
 import useIncomes from "@/hooks/use-incomes";
 import useHighlighter from "@/hooks/use-highlighter";
@@ -61,7 +61,7 @@ const IncomeListItem: React.FC<IncomeListItemProps> = ({ template, loading, onCh
         onClick={() => onCheck(template)}
       >
         {loading ? <CircularProgress size={42} sx={{ padding: "9px" }} /> : <Checkbox checked={paid} tabIndex={-1} disableRipple />}
-        <ArrowUpIcon color="success" sx={{ fontSize: 20, mr: 1 }} />
+        <TemplateTypeIcon type="income" />
         <ListItemText primary={`${template.title} - ${CurrencyTools.format(template.amount)}`} secondary={helperText} />
       </ListItemButton>
     </ListItem>

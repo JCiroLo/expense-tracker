@@ -162,6 +162,9 @@ const SettingsAbout = () => {
           </Link>
         </Stack>
       </Stack>
+      <Typography variant="caption" color="textSecondary" lineHeight={1}>
+        Version {APP_VERSION}
+      </Typography>
     </Stack>
   );
 };
