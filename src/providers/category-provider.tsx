@@ -7,7 +7,7 @@ import Logger from "@/lib/logger";
 import type { ExpenseCategory } from "@/types/expense";
 
 type CategoryContextType = {
-  categories: ExpenseCategory[];
+  values: ExpenseCategory[];
   isLoading: boolean;
   query: ReturnType<typeof useQuery>;
   refresh: () => Promise<void>;
@@ -48,7 +48,7 @@ const CategoryProvider: React.FC<CategoryProviderProps> = ({ children }) => {
   return (
     <CategoryContext.Provider
       value={{
-        categories: categories.data || [],
+        values: categories.data || [],
         isLoading: categories.isLoading,
         query: categories,
         refresh: refreshCategories,

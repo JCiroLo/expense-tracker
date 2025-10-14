@@ -107,9 +107,9 @@ const SettingsAppearance = () => {
 };
 
 const SettingsCategories = () => {
-  const { categories } = useCategories();
+  const categories = useCategories();
 
-  if (categories.length === 0) {
+  if (categories.values.length === 0) {
     return (
       <ListItem>
         <ListItemText primary="No tienes categorías disponibles" secondary="¡Empieza creando una para organizar tus gastos!" />
@@ -119,7 +119,7 @@ const SettingsCategories = () => {
 
   return (
     <>
-      {categories.map((category) => (
+      {categories.values.map((category) => (
         <ListItem
           key={category.id}
           sx={{ "&:hover": { backgroundColor: "action.hover" } }}

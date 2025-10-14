@@ -1,88 +1,89 @@
-import React from "react";
 import { Box, Stack, Typography, useTheme } from "@mui/material";
-import { areaElementClasses, LineChart, lineElementClasses, markElementClasses } from "@mui/x-charts/LineChart";
-import { chartsAxisHighlightClasses } from "@mui/x-charts/ChartsAxisHighlight";
+import {
+  areaElementClasses,
+  chartsAxisHighlightClasses,
+  chartsTooltipClasses,
+  LineChart,
+  lineElementClasses,
+  lineHighlightElementClasses,
+  markElementClasses,
+} from "@mui/x-charts";
+import ChartColorSwitch from "@/components/layout/chart-color-switch";
+import useSharedAnalytics from "@/hooks/use-shared-analytics";
 import useSettingsStore from "@/stores/use-settings-store";
 import CurrencyTools from "@/tools/currency-tools";
-import useSharedAnalytics from "@/hooks/use-shared-analytics";
 
 const seriesPresets = {
   expenses: { label: "Gastos", color: "error" as const },
   incomes: { label: "Ingresos", color: "success" as const },
 };
 
-const FinancialStressChart: React.FC = () => {
+const CumulativeBalanceChart = () => {
+  const theme = useTheme();
   const { selectedTab } = useSettingsStore();
 
-  const theme = useTheme();
-  const { balance } = useSharedAnalytics();
+  const { cumulativeBalance } = useSharedAnalytics();
 
   return (
     <LineChart
       series={[
         {
-          label: seriesPresets.expenses.label,
-          data: balance.data.expenses,
-          color: theme.palette[seriesPresets.expenses.color].main,
-          curve: "bumpX",
-          area: true,
-
-          valueFormatter: (value) => CurrencyTools.format(value || 0),
-        },
-        {
-          label: seriesPresets.incomes.label,
-          data: balance.data.incomes,
-          color: theme.palette[seriesPresets.incomes.color].main,
+          data: cumulativeBalance.data,
           curve: "bumpX",
           area: true,
           valueFormatter: (value) => CurrencyTools.format(value || 0),
-        },
-      ]}
-      yAxis={[
-        {
-          position: "none",
-          domainLimit: (_, maxValue: number) => ({
-            min: -maxValue / 6,
-            max: maxValue,
-          }),
         },
       ]}
       xAxis={[
         {
+          data: cumulativeBalance.xAxis,
           position: "none",
           scaleType: "point",
-          data: balance.xAxis,
           valueFormatter: (value: string) => (selectedTab === "monthly" ? `Día ${value}` : value),
         },
       ]}
+      yAxis={[{ position: "none" }]}
       margin={{ bottom: 0, top: 8, left: 0, right: 0 }}
       slotProps={{
         legend: { sx: { display: "none" } },
+        tooltip: { sx: { [`.${chartsTooltipClasses.labelCell}`]: { display: "none" } } },
       }}
       sx={(theme) => ({
-        [`& .${markElementClasses.root}`]: { display: "none" },
-        [`& .${areaElementClasses.root}`]: { opacity: 0.1 },
-        [`& .${lineElementClasses.root}`]: { strokeWidth: 2 },
+        [`& .${markElementClasses.root}`]: {
+          display: "none",
+        },
+        [`& .${lineHighlightElementClasses.root}`]: {
+          display: "none",
+        },
+        [`& .${areaElementClasses.root}`]: {
+          fill: "url(#switch-color)",
+          filter: "none",
+        },
+        [`& .${lineElementClasses.root}`]: {
+          strokeWidth: 0,
+        },
         [`& .${chartsAxisHighlightClasses.root}`]: {
           stroke: theme.palette.primary.main,
           strokeDasharray: "none",
           strokeWidth: 2,
         },
       })}
-    />
+    >
+      <ChartColorSwitch color1={theme.palette.success.main} color2={theme.palette.error.main} id="switch-color" threshold={0} />
+    </LineChart>
   );
 };
 
-const FinancialStressChartLegend: React.FC = () => {
+const CumulativeBalanceChartLegend: React.FC = () => {
   return (
     <Stack direction="row" spacing={2}>
       <Stack direction="row" spacing={1} alignItems="center">
         <Box
           component="span"
           sx={{
-            width: 16,
-            height: 2,
-            borderRadius: 2,
+            width: 12,
+            height: 12,
+            borderRadius: 0.5,
             bgcolor: (theme) => theme.palette[seriesPresets.expenses.color].main,
           }}
         />
@@ -92,9 +93,9 @@ const FinancialStressChartLegend: React.FC = () => {
         <Box
           component="span"
           sx={{
-            width: 16,
-            height: 2,
-            borderRadius: 2,
+            width: 12,
+            height: 12,
+            borderRadius: 0.5,
             bgcolor: (theme) => theme.palette[seriesPresets.incomes.color].main,
           }}
         />
@@ -104,5 +105,5 @@ const FinancialStressChartLegend: React.FC = () => {
   );
 };
 
-export { FinancialStressChartLegend };
-export default FinancialStressChart;
+export { CumulativeBalanceChartLegend };
+export default CumulativeBalanceChart;

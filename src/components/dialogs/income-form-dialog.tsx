@@ -34,7 +34,7 @@ type IncomeFormDialogProps = {
 const IncomeFormDialog: React.FC<IncomeFormDialogProps> = ({ open, onClose, template }) => {
   const user = useSessionStore((state) => state.user);
 
-  const { categories } = useCategories();
+  const categories = useCategories();
   const { refresh } = useIncomes();
   const { filters } = useFilters();
 
@@ -290,7 +290,7 @@ const IncomeFormDialog: React.FC<IncomeFormDialogProps> = ({ open, onClose, temp
               onChange={handleCategoryChange}
             >
               <MenuItem value="none">Sin categoría</MenuItem>
-              {categories.map((category) => (
+              {categories.values.map((category) => (
                 <MenuItem key={category.id} value={category.id}>
                   {category.name}
                 </MenuItem>

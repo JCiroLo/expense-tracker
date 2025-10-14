@@ -11,6 +11,7 @@ import ExpenseProvider from "@/providers/expense-provider";
 import FiltersProvider from "@/providers/filters-provider";
 import HighlightProvider from "@/providers/highlight-provider";
 import IncomeProvider from "@/providers/income-provider";
+import SharedAnalyticsProvider from "@/providers/shared-analytics-provider";
 import ThemeProvider from "@/providers/theme-provider";
 import { initDayjs } from "@/lib/dayjs";
 import router from "@/lib/router";
@@ -31,7 +32,9 @@ createRoot(document.getElementById("root")!).render(
                 <CategoryProvider>
                   <ExpenseProvider>
                     <IncomeProvider>
-                      <RouterProvider router={router} />
+                      <SharedAnalyticsProvider>
+                        <RouterProvider router={router} />
+                      </SharedAnalyticsProvider>
                     </IncomeProvider>
                   </ExpenseProvider>
                 </CategoryProvider>

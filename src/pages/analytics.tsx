@@ -1,108 +1,41 @@
-import { useMemo } from "react";
 import { Paper, Stack, Typography } from "@mui/material";
-import { Gauge } from "@mui/x-charts";
-import DistributionChart from "@/components/charts/distribution-chart";
-import FinancialStressChart from "@/components/charts/financial-stress-chart";
-import useExpenses from "@/hooks/use-expenses";
-import useSettingsStore from "@/stores/use-settings-store";
-import CurrencyTools from "@/tools/currency-tools";
+import CumulativeBalanceChart, { CumulativeBalanceChartLegend } from "@/components/charts/cumulative-balance-chart";
+import ExpenseDistributionChart from "@/components/charts/expense-distribution-chart";
+import FinancialStressChart, { FinancialStressChartLegend } from "@/components/charts/financial-stress-chart";
+import IncomeDistributionChart from "@/components/charts/income-distribution-chart";
+import ProgressChart from "@/components/charts/progress-chart";
 
 const Analytics = () => {
-  const { templates, records } = useExpenses();
-  const { selectedTab } = useSettingsStore();
-
-  const totals = useMemo(() => {
-    const values = templates[selectedTab].reduce(
-      (acc, template) => {
-        const record = records.indexed[template.id] || null;
-        const isPaid = Boolean(record);
-        const amount = template.amount;
-
-        if (template.type === "monthly") {
-          acc.monthly.expected += amount;
-
-          if (isPaid) acc.monthly.paid += amount;
-        } else {
-          acc.annual.expected += amount;
-
-          if (isPaid) acc.annual.paid += amount;
-        }
-
-        return acc;
-      },
-      {
-        monthly: { expected: 0, paid: 0 },
-        annual: { expected: 0, paid: 0 },
-        oneTime: { expected: 0, paid: 0 },
-      }
-    );
-
-    const allValues = {
-      expected: values.monthly.expected + values.annual.expected + values.oneTime.expected,
-      paid: values.monthly.paid + values.annual.paid + values.oneTime.paid,
-    };
-
-    const percentages = {
-      monthly: values.monthly.expected === 0 ? 100 : (values.monthly.paid / values.monthly.expected) * 100,
-      annual: values.annual.expected === 0 ? 100 : (values.annual.paid / values.annual.expected) * 100,
-      oneTime: values.oneTime.expected === 0 ? 100 : (values.oneTime.paid / values.oneTime.expected) * 100,
-      all: allValues.expected === 0 ? 100 : (allValues.paid / allValues.expected) * 100,
-    };
-
-    return {
-      percentages,
-      monthly: values.monthly,
-      annual: values.annual,
-      oneTime: values.oneTime,
-      all: allValues,
-    };
-  }, [templates, selectedTab, records.indexed, records.oneTime]);
-
   return (
-    <Stack height="100%" gap={{ xs: 1, sm: 2 }} sx={{ overflowY: "auto" }}>
-      <Stack direction={{ xs: "column", sm: "row" }} alignItems="center" gap={2} marginBottom={{ xs: 2, sm: 0 }}>
-        <Stack order={{ xs: 1, sm: 0 }} flexShrink={0} justifyContent="center" alignItems="center" width="33%" padding={1} borderRadius={1}>
-          <Typography component="h5" variant="body2" color="textSecondary" textAlign="center">
-            Avance
-          </Typography>
-          <Typography textAlign="center" fontSize="1.5rem">
-            {CurrencyTools.format(totals[selectedTab].paid)}
-          </Typography>
-        </Stack>
-        <Gauge
-          value={totals.percentages[selectedTab]}
-          height={150}
-          startAngle={-140}
-          endAngle={140}
-          cornerRadius="50%"
-          text={({ value }) => `${value?.toFixed() || 0}%`}
-          sx={{
-            order: { xs: 0, sm: 1 },
-            "& .MuiGauge-valueText": {
-              fontSize: "2rem",
-            },
-          }}
-        />
-        <Stack order={2} flexShrink={0} justifyContent="center" alignItems="center" width="33%" padding={1} borderRadius={1}>
-          <Typography component="h5" variant="body2" color="textSecondary" textAlign="center">
-            Meta
-          </Typography>
-          <Typography textAlign="center" fontSize="1.5rem">
-            {CurrencyTools.format(totals[selectedTab].expected)}
-          </Typography>
-        </Stack>
-      </Stack>
+    <Stack height="100%" gap={{ xs: 1, sm: 2 }} mb={{ xs: 0, sm: 1 }} sx={{ overflowY: "auto" }}>
+      <ProgressChart />
       <Stack component={Paper} elevation={0} flexShrink={0} gap={1} borderRadius={1} overflow="hidden" height={200}>
-        <Typography variant="subtitle1" paddingX={2} paddingY={1}>
-          Estrés financiero
-        </Typography>
+        <Stack direction="row" justifyContent="space-between" alignItems="center" paddingX={2} paddingY={1}>
+          <Typography variant="subtitle1">Estrés financiero</Typography>
+          <FinancialStressChartLegend />
+        </Stack>
         <FinancialStressChart />
       </Stack>
       <Stack component={Paper} elevation={0} flexShrink={0} gap={1} borderRadius={1} overflow="hidden" height={200}>
-        <Typography variant="subtitle1" paddingX={2} paddingY={1}>
-          Distribución
-        </Typography>
-        <DistributionChart />
+        <Stack direction="row" justifyContent="space-between" alignItems="center" paddingX={2} paddingY={1}>
+          <Typography variant="subtitle1">Balance</Typography>
+          <CumulativeBalanceChartLegend />
+        </Stack>
+        <CumulativeBalanceChart />
+      </Stack>
+      <Stack direction={{ xs: "column", sm: "row" }} spacing={{ xs: 1, sm: 2 }}>
+        <Stack component={Paper} elevation={0} gap={1} borderRadius={1} overflow="hidden" width={{ xs: "100%", sm: "50%" }} height={200}>
+          <Typography variant="subtitle1" paddingX={2} paddingY={1}>
+            Distribución de gastos
+          </Typography>
+          <ExpenseDistributionChart />
+        </Stack>
+        <Stack component={Paper} elevation={0} gap={1} borderRadius={1} overflow="hidden" width={{ xs: "100%", sm: "50%" }} height={200}>
+          <Typography variant="subtitle1" paddingX={2} paddingY={1}>
+            Distribución de ingresos
+          </Typography>
+          <IncomeDistributionChart />
+        </Stack>
       </Stack>
     </Stack>
   );

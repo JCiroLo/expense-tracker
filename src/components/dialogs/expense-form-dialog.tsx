@@ -33,7 +33,7 @@ type ExpenseFormDialogProps = {
 const ExpenseFormDialog: React.FC<ExpenseFormDialogProps> = ({ open, onClose, template }) => {
   const user = useSessionStore((state) => state.user);
 
-  const { categories } = useCategories();
+  const categories = useCategories();
   const { refresh } = useExpenses();
   const { filters } = useFilters();
 
@@ -291,7 +291,7 @@ const ExpenseFormDialog: React.FC<ExpenseFormDialogProps> = ({ open, onClose, te
               onChange={handleCategoryChange}
             >
               <MenuItem value="none">Sin categoría</MenuItem>
-              {categories.map((category) => (
+              {categories.values.map((category) => (
                 <MenuItem key={category.id} value={category.id}>
                   {category.name}
                 </MenuItem>

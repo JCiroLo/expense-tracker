@@ -5,12 +5,15 @@ import ExpenseList from "@/components/layout/expense-list";
 import IncomeList from "@/components/layout/income-list";
 import useSettingsStore from "@/stores/use-settings-store";
 import useExpenses from "@/hooks/use-expenses";
+import useFilters from "@/hooks/use-filters";
 import useIncomes from "@/hooks/use-incomes";
+import DateTools from "@/tools/date-tools";
 
 const Home = () => {
   const { selectedTab } = useSettingsStore();
 
   const expenses = useExpenses();
+  const { filters } = useFilters();
   const incomes = useIncomes();
 
   const isFetching = expenses.isLoading || incomes.isLoading;
@@ -19,7 +22,7 @@ const Home = () => {
 
   return (
     <>
-      {selectedTab === "monthly" && <ExpiredExpenseList />}
+      {selectedTab === "monthly" && filters.month === DateTools.month && <ExpiredExpenseList />}
       {isFetching ? (
         <Box height="100%" />
       ) : (

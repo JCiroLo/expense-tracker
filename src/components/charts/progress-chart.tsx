@@ -1,0 +1,111 @@
+import { useMemo } from "react";
+import { Grid, Stack, Typography } from "@mui/material";
+import { Gauge } from "@mui/x-charts";
+import useExpenses from "@/hooks/use-expenses";
+import useSettingsStore from "@/stores/use-settings-store";
+import CurrencyTools from "@/tools/currency-tools";
+
+const ProgressChart = () => {
+  const { templates, records } = useExpenses();
+  const { selectedTab } = useSettingsStore();
+
+  const totals = useMemo(() => {
+    const values = templates[selectedTab].reduce(
+      (acc, template) => {
+        const record = records.indexed[template.id] || null;
+        const isPaid = Boolean(record);
+        const amount = template.amount;
+
+        if (template.type === "monthly") {
+          acc.monthly.expected += amount;
+
+          if (isPaid) acc.monthly.paid += amount;
+        } else {
+          acc.annual.expected += amount;
+
+          if (isPaid) acc.annual.paid += amount;
+        }
+
+        return acc;
+      },
+      {
+        monthly: { expected: 0, paid: 0 },
+        annual: { expected: 0, paid: 0 },
+        oneTime: { expected: 0, paid: 0 },
+      }
+    );
+
+    const allValues = {
+      expected: values.monthly.expected + values.annual.expected + values.oneTime.expected,
+      paid: values.monthly.paid + values.annual.paid + values.oneTime.paid,
+    };
+
+    const percentages = {
+      monthly: values.monthly.expected === 0 ? 100 : (values.monthly.paid / values.monthly.expected) * 100,
+      annual: values.annual.expected === 0 ? 100 : (values.annual.paid / values.annual.expected) * 100,
+      oneTime: values.oneTime.expected === 0 ? 100 : (values.oneTime.paid / values.oneTime.expected) * 100,
+      all: allValues.expected === 0 ? 100 : (allValues.paid / allValues.expected) * 100,
+    };
+
+    return {
+      percentages,
+      monthly: values.monthly,
+      annual: values.annual,
+      oneTime: values.oneTime,
+      all: allValues,
+    };
+  }, [templates, selectedTab, records.indexed, records.oneTime]);
+
+  return (
+    <Grid
+      display="grid"
+      gridTemplateColumns={{ xs: "repeat(2, 1fr)", sm: "repeat(3, 1fr)" }}
+      gridTemplateRows={{ xs: "repeat(2, 1fr)", sm: "1fr" }}
+      alignItems="center"
+      justifyItems="center"
+      marginBottom={{ xs: 2, sm: 0 }}
+    >
+      <Stack order={0} gridArea="1 / 1 / 2 / 2" justifyContent="center" alignItems="center" width="33%" padding={1} borderRadius={1}>
+        <Typography component="h5" variant="body2" color="textSecondary" textAlign="center">
+          Avance
+        </Typography>
+        <Typography textAlign="center" fontSize="1.5rem">
+          {CurrencyTools.format(totals[selectedTab].paid)}
+        </Typography>
+      </Stack>
+      <Gauge
+        value={totals.percentages[selectedTab]}
+        height={150}
+        startAngle={-140}
+        endAngle={140}
+        cornerRadius="50%"
+        text={({ value }) => `${value?.toFixed() || 0}%`}
+        sx={{
+          order: { xs: 2, sm: 1 },
+          gridArea: { xs: "1 / 2 / 3 / 3", sm: "1 / 2 / 2 / 3" },
+          "& .MuiGauge-valueText": {
+            fontSize: "2rem",
+          },
+        }}
+      />
+      <Stack
+        order={{ xs: 1, sm: 2 }}
+        gridArea={{ xs: "2 / 1 / 3 / 2", sm: "1 / 3 / 2 / 4" }}
+        justifyContent="center"
+        alignItems="center"
+        width="33%"
+        padding={1}
+        borderRadius={1}
+      >
+        <Typography component="h5" variant="body2" color="textSecondary" textAlign="center">
+          Meta
+        </Typography>
+        <Typography textAlign="center" fontSize="1.5rem">
+          {CurrencyTools.format(totals[selectedTab].expected)}
+        </Typography>
+      </Stack>
+    </Grid>
+  );
+};
+
+export default ProgressChart;
