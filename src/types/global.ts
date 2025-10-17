@@ -17,3 +17,13 @@ export type Dialog =
 export type AccentColor = "ant" | "lime" | "dragonfruit" | "lavender" | "mintice";
 
 export type RouteScope = "REQUIRES_AUTH" | "HIDE_FOR_AUTH";
+
+export type User = {
+  consent_date: string;
+  created_at: string;
+  data_processing_consent: boolean;
+  email: string;
+  id: string;
+  privacy_policy_accepted: boolean;
+  terms_and_conditions_accepted: boolean;
+};

@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { Link as RouterLink } from "react-router-dom";
 import {
   Button,
   Dialog,
@@ -30,6 +31,7 @@ import TrashIcon from "@/components/icons/trash-icon";
 import UserIcon from "@/components/icons/user-icon";
 import useCategories from "@/hooks/use-categories";
 import useSettingsStore from "@/stores/use-settings-store";
+import DateTools from "@/tools/date-tools";
 import type { AccentColor } from "@/types/global";
 
 type SettingsDialogProps = {
@@ -162,8 +164,16 @@ const SettingsAbout = () => {
           </Link>
         </Stack>
       </Stack>
-      <Typography variant="caption" color="textSecondary" lineHeight={1}>
-        Version {APP_VERSION}
+      <Stack spacing={1}>
+        <Link component={RouterLink} to="/privacy-policy" variant="body2" color="text.secondary" underline="hover">
+          Política de Privacidad
+        </Link>
+        <Link component={RouterLink} to="/terms-and-conditions" variant="body2" color="text.secondary" underline="hover">
+          Términos y Condiciones
+        </Link>
+      </Stack>
+      <Typography variant="body2" color="text.secondary">
+        © {DateTools.year} Antracker v{APP_VERSION}. Todos los derechos reservados.
       </Typography>
     </Stack>
   );

@@ -2,7 +2,7 @@ import { Alert, Link, Stack, Typography } from "@mui/material";
 import useExpenses from "@/hooks/use-expenses";
 import useHighlighter from "@/hooks/use-highlighter";
 
-const ExpiredExpenseList = () => {
+const ExpirationAlerts = () => {
   const { templates } = useExpenses();
   const highlighter = useHighlighter();
 
@@ -72,4 +72,4 @@ const ExpiredExpenseList = () => {
   );
 };
 
-export default ExpiredExpenseList;
+export default ExpirationAlerts;
