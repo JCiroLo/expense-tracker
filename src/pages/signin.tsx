@@ -1,13 +1,14 @@
 import React from "react";
 import { useSearchParams } from "react-router";
 import { Alert, Button, CircularProgress, Stack, TextField, Typography } from "@mui/material";
-import { isSignInWithEmailLink, sendSignInLinkToEmail, signInWithEmailLink } from "firebase/auth";
+import { isSignInWithEmailLink, sendSignInLinkToEmail, signInWithEmailLink, type User } from "firebase/auth";
 import ConsentDialog from "@/components/dialogs/consent-dialog";
 import useSessionStore from "@/stores/use-session-store";
 import useAsyncEffect from "@/hooks/use-async-effect";
 import $User from "@/services/user";
 import { auth } from "@/lib/firebase";
 import Env from "@/lib/env";
+import Logger from "@/lib/logger";
 
 const Signin = () => {
   const { setUser } = useSessionStore();
@@ -72,6 +73,26 @@ const Signin = () => {
     }
   }
 
+  async function checkUser(data: User) {
+    const user = await $User.get(data.uid);
+
+    if (user) {
+      Logger.log("user exists", user);
+      return;
+    }
+
+    Logger.log("user does not exist", data);
+
+    await $User.create({
+      id: data.uid,
+      email: data.email!,
+      consent_date: new Date().toISOString(),
+      privacy_policy_accepted: true,
+      terms_and_conditions_accepted: true,
+      data_processing_consent: true,
+    });
+  }
+
   useAsyncEffect(async () => {
     if (verify) {
       const email = decodeURIComponent(verify);
@@ -83,14 +104,7 @@ const Signin = () => {
 
           const result = await signInWithEmailLink(auth, email, url);
 
-          await $User.create({
-            id: result.user.uid,
-            email: result.user.email!,
-            consent_date: new Date().toISOString(),
-            privacy_policy_accepted: true,
-            terms_and_conditions_accepted: true,
-            data_processing_consent: true,
-          });
+          await checkUser(result.user);
 
           setUser(result.user);
           setLoading(false);
